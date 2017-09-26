@@ -4,42 +4,110 @@ import json
 from time import time
 
 
-def get_authenticate_message(username, password):
-    if not is_long_name(username):
-        return merge_jsons(get_action_json('authenticate'),
-                           get_time_json(),
-                           get_user_json(username, password))
+class JimAction:
+    presence = 'presence'  # i am online
+    probe = 'probe'  # are you online?
+    msg = 'msg'  # i send message
+    quit = 'quit'  # i disconnect
+    authenticate = 'authenticate'  # sign me in
+    join = 'join'  # i join chat
+    leave = 'leave'  # i leave
 
 
-def get_action_json(action, extend_json=None):
-    json_data = {}
-    json_data['action'] = action
-    if extend_json is not None:
-        json_data = {**json_data, **json.loads(extend_json)}
-    json_object = json.dumps(json_data)
-    return json_object
+class JimCode:
+    standard_notification = 100
+    important_notification = 101
+    ok = 200
+    created = 201
+    accepted = 202
+    wrong_request = 400
+    not_authorized = 401
+    wrong_name_pass = 402
+    user_forbidden = 403
+    user_not_found = 404
+    user_conflict = 409
+    user_gone = 410
+    server_error = 500
 
 
-def get_user_json(username, password):
-    user_data = {}
-    user_data['account_name'] = username
-    user_data['password'] = password
-    json_data = {}
-    json_data['user'] = user_data
-    return json.dumps(json_data)
+class JsonGenerator:
+    def __init__(self):
+        self.data = {}
+
+    def add_action(self, action):
+        self.data['action'] = action
+
+    def add_time(self):
+        self.data['time'] = time()
+
+    def add_type(self, type):
+        self.data['type'] = type
+
+    def add_user(self, user):
+        self.data['user'] = user.data
+
+    def add_account_name(self, account_name):
+        self.data['account_name'] = account_name
+
+    def add_status(self, status):
+        self.data['status'] = status
+
+    def add_password(self, password):
+        self.data['password'] = password
+
+    def add_response(self, response):
+        self.data['response'] = response
+
+    def add_alert(self, alert):
+        self.data['alert'] = alert
+
+    def add_error(self, error):
+        self.data['error'] = error
+
+    def get_json(self):
+        return json.dumps(self.data)
 
 
-def get_time_json():
-    time_data = {}
-    time_data['time'] = time()
-    return json.dumps(time_data)
+def get_presence_json(username, status):
+    if is_long_name(username):
+        return
+    user_data = JsonGenerator()
+    user_data.add_account_name(username)
+    user_data.add_status(status)
+
+    json_data = JsonGenerator()
+    json_data.add_action(JimAction.presence)
+    json_data.add_time()
+    json_data.add_type('status')
+    json_data.add_user(user_data)
+    return json_data.get_json()
 
 
-def merge_jsons(*jsons):
-    merged_json_data = {}
-    for each_json in jsons:
-        merged_json_data = {**merged_json_data, **json.loads(each_json)}
-    return json.dumps(merged_json_data)
+def get_probe_json():
+    json_data = JsonGenerator()
+    json_data.add_action(JimAction.probe)
+    json_data.add_time()
+    return json_data.get_json()
+
+
+def get_empty_response_json(response):
+    json_data = JsonGenerator()
+    json_data.add_response(response)
+    return json_data.get_json()
+
+
+def get_authenticate_json(username, password):
+    if is_long_name(username):
+        return
+    user_data = JsonGenerator()
+    user_data.add_account_name(username)
+    user_data.add_password(password)
+
+    json_data = JsonGenerator()
+    json_data.add_action(JimAction.authenticate)
+    json_data.add_time()
+    json_data.add_user(user_data)
+    return json_data.get_json()
 
 
 def is_long_name(name):
