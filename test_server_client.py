@@ -8,5 +8,5 @@ new_window_command = "cmd.exe /c start".split()
 # Open new consoles, run server and client
 project_path = " " + dirname(__file__)
 echos = [executable, project_path, "/server.py"], \
-        [executable, project_path, "/client.py"]
+        [executable, project_path, "/client.py 127.0.0.1"]
 processes = [Popen(new_window_command + [echo]) for echo in echos]
