@@ -18,12 +18,24 @@ class TestGetPresenceJson(unittest.TestCase):
 
 
 class TestGetProbeJson(unittest.TestCase):
-    def test_presence_json(self):
+    def test_probe_json(self):
         json_data = {'action': 'probe',
                      'time': time.time()}
         correct_json = json.dumps(json_data)
         function_json = json_creator.get_probe_json()
         self.assertEqual(correct_json, function_json)
+
+
+class TestGetEmptyResponse(unittest.TestCase):
+    def test_ok_response(self):
+        json_data = {'response': 'ok'}
+        correct_json = json.dumps(json_data)
+        function_json = json_creator.get_empty_response_json('ok')
+        self.assertEqual(correct_json, function_json)
+
+    def test_wrong_type_response(self):
+        with self.assertRaises(TypeError):
+            function_json = json_creator.get_empty_response_json(None, None)
 
 
 class TestIsLongName(unittest.TestCase):
