@@ -1,5 +1,4 @@
 # Tests for json_creator
-
 import json_creator
 import json
 import unittest
