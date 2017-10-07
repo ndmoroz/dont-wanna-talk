@@ -1,4 +1,4 @@
-# Function to create JSON messages
+# Functions to create JIM messages
 
 import json
 from time import time
@@ -64,6 +64,9 @@ class JsonGenerator:
     def add_error(self, error):
         self.data['error'] = error
 
+    def get_dict(self):
+        return self.data
+
     def get_json(self):
         return json.dumps(self.data)
 
@@ -80,20 +83,20 @@ def get_presence_json(username, status):
     json_data.add_time()
     json_data.add_type('status')
     json_data.add_user(user_data)
-    return json_data.get_json()
+    return json_data.get_dict()
 
 
 def get_probe_json():
     json_data = JsonGenerator()
     json_data.add_action(JimAction.probe)
     json_data.add_time()
-    return json_data.get_json()
+    return json_data.get_dict()
 
 
 def get_empty_response_json(response):
     json_data = JsonGenerator()
     json_data.add_response(response)
-    return json_data.get_json()
+    return json_data.get_dict()
 
 
 def get_authenticate_json(username, password):
@@ -107,8 +110,12 @@ def get_authenticate_json(username, password):
     json_data.add_action(JimAction.authenticate)
     json_data.add_time()
     json_data.add_user(user_data)
-    return json_data.get_json()
+    return json_data.get_dict()
 
 
 def is_long_name(name):
     return len(name) > 25
+
+
+def json(func):
+    return json.dumps(func)

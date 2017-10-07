@@ -1,6 +1,6 @@
 # Client program
 from socket import socket, AF_INET, SOCK_STREAM
-from json_creator import get_presence_json
+from json_creator import json, get_presence_json
 import sys
 
 
@@ -17,6 +17,14 @@ def get_client_socket(server_ip, server_port):
     return client_socket
 
 
+def send_presence_message(client_socket):
+    client_socket.send(json(get_presence_json("First", "Nah")).encode('utf-8'))
+
+
+def receive_server_response(client_socket):
+    return client_socket.recv(1024).decode("utf-8")
+
+
 def main():
     # Parse script arguments
     server_ip, server_port = get_server_ip_port(sys.argv)
@@ -24,16 +32,14 @@ def main():
         return
 
     # Create socket and connect to server
-    s = get_client_socket(server_ip, server_port)
+    with get_client_socket(server_ip, server_port) as s:
+        # Send presence message
+        send_presence_message(s)
 
-    # Send presence message
-    s.send(get_presence_json("First", "Nah").encode('utf-8'))
+        # Receive server answer to presence message
+        print(receive_server_response(s))
 
-    # Receive server answer to presence message
-    presence_response = s.recv(1024)
-    print(presence_response.decode("utf-8"))
-
-    s.close()
+        s.close()
 
 
 if __name__ == "__main__":
