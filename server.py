@@ -3,8 +3,10 @@ from socket import socket, AF_INET, SOCK_STREAM
 from json_creator import json, get_empty_response_json, JimCode
 import argparse
 import log_config
+from select import select
 
 log = log_config.Log('server')
+
 
 class Server:
     def __init__(self):
@@ -18,8 +20,8 @@ class Server:
         if __name__ == "__main__":
             # Parse script arguments
             arg_parser = argparse.ArgumentParser()
-            arg_parser.add_argument('-p', action='store')
-            arg_parser.add_argument('-a', action='store')
+            arg_parser.add_argument('-p')
+            arg_parser.add_argument('-a')
             arguments = arg_parser.parse_args()
             server_port = 7777 if (arguments.p is None) else int(arguments.p)
         else:
@@ -32,8 +34,8 @@ class Server:
         if __name__ == "__main__":
             # Parse script arguments
             arg_parser = argparse.ArgumentParser()
-            arg_parser.add_argument('-p', action='store')
-            arg_parser.add_argument('-a', action='store')
+            arg_parser.add_argument('-p')
+            arg_parser.add_argument('-a')
             arguments = arg_parser.parse_args()
             ip_to_listen = '' if (arguments.a is None) else str(arguments.a)
         else:
@@ -49,12 +51,22 @@ class Server:
         return s
 
     @log
+    def get_client_message(self, client_socket):
+        return client_socket.recv(1024).decode("utf-8")
+
+    @log
+    def send_client_message(self, client_socket, message):
+        client_socket.send(message.encode('utf-8'))
+
+    @log
     def main(self, **main_args):
         server_port = self.get_server_port(**main_args)
         ip_to_listen = self.get_ips_to_listen(**main_args)
 
         # Create TCP socket at localhost:7777 and wait for 3 or less connections
         s = self.get_server_socket(server_port, 3)
+
+        clients = []
 
         while not self.stopped:
             # Accept client and get its socket and address
@@ -65,17 +77,19 @@ class Server:
                 continue
 
             print("Received connection request from %s" % str(address))
+            clients.append(client)
 
             # Receive presence message
-            client_presence = client.recv(1024)
-            print(client_presence.decode("utf-8"))
+            client_message = self.get_client_message(client)
+            print(client_message)
 
             # Send OK answer
-            client.send(
-                json(get_empty_response_json(JimCode.ok)).encode('utf-8'))
+            self.send_client_message(client,
+                                     json(get_empty_response_json(JimCode.ok)))
 
             client.close()
 
 
 if __name__ == "__main__":
-    Server.main()
+    server = Server()
+    server.main()
