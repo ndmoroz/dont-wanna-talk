@@ -64,6 +64,15 @@ class JsonGenerator:
     def add_error(self, error):
         self.data['error'] = error
 
+    def add_to(self, destination):
+        self.data['to'] = destination
+
+    def add_from(self, author):
+        self.data['from'] = author
+
+    def add_message(self, message):
+        self.data['message'] = message
+
     def get_dict(self):
         return self.data
 
@@ -111,6 +120,16 @@ def get_authenticate_json(username, password):
     json_data.add_time()
     json_data.add_user(user_data)
     return json_data.get_dict()
+
+
+def get_chatroom_message(chatroom, username, message):
+    jim_data = JsonGenerator()
+    jim_data.add_action(JimAction.msg)
+    jim_data.add_time()
+    jim_data.add_to(chatroom)
+    jim_data.add_from(username)
+    jim_data.add_message(message)
+    return jim_data.get_dict()
 
 
 def is_long_name(name):

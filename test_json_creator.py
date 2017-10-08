@@ -27,7 +27,7 @@ class TestGetPresenceJson(unittest.TestCase):
 class TestGetProbeJson(unittest.TestCase):
     def test_probe_json(self):
         correct_message = {'action': 'probe',
-                     'time': time.time()}
+                           'time': time.time()}
         function_message = json_creator.get_probe_json()
         self.assertTrue(
             are_equal_dicts(correct_message, function_message, 'time'))
@@ -55,16 +55,16 @@ class TestIsLongName(unittest.TestCase):
 class TestGetAutenticateMessage(unittest.TestCase):
     def test_normal_case(self):
         correct_message = {'action': 'authenticate', 'time': time.time(),
-                             'user':
-                                 {'account_name': 'M', 'password': '123'}}
+                           'user':
+                               {'account_name': 'M', 'password': '123'}}
         function_message = json_creator.get_authenticate_json('M', '123')
         self.assertTrue(
             are_equal_dicts(correct_message, function_message, 'time'))
 
     def test_no_pass_case(self):
         correct_message = {'action': 'authenticate', 'time': time.time(),
-                             'user':
-                                 {'account_name': 'M', 'password': ''}}
+                           'user':
+                               {'account_name': 'M', 'password': ''}}
         function_message = json_creator.get_authenticate_json('M', '')
         self.assertTrue(
             are_equal_dicts(correct_message, function_message, 'time'))
@@ -73,6 +73,18 @@ class TestGetAutenticateMessage(unittest.TestCase):
         function_message = json_creator.get_authenticate_json(
             'abcdefghijklmnopqrstuvwxyz', '123')
         self.assertIsNone(function_message)
+
+
+class TestGetChatroomMessage(unittest.TestCase):
+    def test_normal_case(self):
+        correct_message = {'action': 'msg', 'time': time.time(),
+                           'to': 'MainChat', 'from': 'Alice',
+                           'message': 'I don\'t really wanna talk'}
+        function_message = \
+            json_creator.get_chatroom_message('MainChat', 'Alice',
+                                              'I don\'t really wanna talk')
+        self.assertTrue(
+            are_equal_dicts(correct_message, function_message, 'time'))
 
 
 if __name__ == '__main__':
