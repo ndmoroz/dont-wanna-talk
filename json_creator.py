@@ -132,6 +132,12 @@ def get_chatroom_message(chatroom, username, message):
     return jim_data.get_dict()
 
 
+def get_quit():
+    jim_data = JsonGenerator()
+    jim_data.add_action(JimAction.quit)
+    return jim_data.get_dict()
+
+
 def is_long_name(name):
     return len(name) > 25
 

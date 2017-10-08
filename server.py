@@ -48,6 +48,7 @@ class Server:
         s = socket(AF_INET, SOCK_STREAM)
         s.bind(('', server_port))
         s.listen(max_connections)
+        s.settimeout(0.001)
         return s
 
     @log
@@ -69,25 +70,60 @@ class Server:
         clients = []
 
         while not self.stopped:
-            # Accept client and get its socket and address
-            client, address = s.accept()
+            try:
+                # Accept client and get its socket and address
+                client, address = s.accept()
+            except:
+                pass
+            else:
+                if len(ip_to_listen) > 0 and address[0] != ip_to_listen:
+                    client.close()
+                    continue
 
-            if len(ip_to_listen) > 0 and address[0] != ip_to_listen:
-                client.close()
-                continue
+                print("Received connection request from %s" % str(address))
 
-            print("Received connection request from %s" % str(address))
-            clients.append(client)
+                # Receive presence message
+                client_message = self.get_client_message(client)
+                print(client_message)
 
-            # Receive presence message
-            client_message = self.get_client_message(client)
-            print(client_message)
+                # Send OK answer
+                self.send_client_message(client,
+                                         json(get_empty_response_json(
+                                             JimCode.ok)))
 
-            # Send OK answer
-            self.send_client_message(client,
-                                     json(get_empty_response_json(JimCode.ok)))
+                clients.append(client)
 
-            client.close()
+            r = []
+            w = []
+            message = ''
+
+            try:
+                r, w, e = select(clients, clients, [], 0)
+            except:
+                pass
+
+            for client in r:
+                try:
+                    message = self.get_client_message(client)
+                except:
+                    print('cant read, closing client')
+                    client.close()
+                    clients.remove(client)
+                else:
+                    print(message)
+
+            for client in w:
+                try:
+                    self.send_client_message(client, message)
+                except:
+                    print('cant write, closing client')
+                    client.close()
+                    clients.remove(client)
+
+                    # while True:
+                    #     # Receive presence message
+                    #     client_message = self.get_client_message(client)
+                    #     print(client_message)
 
 
 if __name__ == "__main__":

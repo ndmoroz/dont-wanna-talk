@@ -26,47 +26,60 @@ class Client:
         self.rw_status = 'r' if arguments.w is None else 'w'
 
     @log
-    def get_client_socket(self, server_ip, server_port):
+    def get_client_socket(self):
         client_socket = socket(AF_INET, SOCK_STREAM)
-        client_socket.connect((server_ip, server_port))
+        client_socket.connect((self.server_ip, self.server_port))
         return client_socket
 
     @log
-    def send_message(self, client_socket, message):
-        client_socket.send(message.encode('utf-8'))
+    def send_message(self, message):
+        self.socket.send(message.encode('utf-8'))
 
     @log
-    def receive_server_response(self, client_socket):
-        return client_socket.recv(1024).decode("utf-8")
+    def receive_server_response(self):
+        return self.socket.recv(1024).decode("utf-8")
+
+    @log
+    def start_writer_mode(self):
+        while True:
+            message = input('Your message ("\\\\\\" to exit): ')
+            if message == '\\\\\\':
+                break
+            self.send_message(
+                json(get_chatroom_message(chatroom='Agora',
+                                          username=self.user_name,
+                                          message=message)))
+
+    @log
+    def start_reader_mode(self):
+        while True:
+            print(self.receive_server_response())
 
     @log
     def main(self):
         # Parse script arguments
         self.parse_arguments()
-        print(self.server_ip)
-        print(self.server_port)
-        print(self.rw_status)
 
         if self.server_ip is None:
             return
 
         # Create socket and connect to server
-        with self.get_client_socket(self.server_ip, self.server_port) as s:
-            user_name = input("Enter your name: ")
+        self.socket = self.get_client_socket()
 
-            # Send presence message
-            self.send_message(s, json(get_presence_json(user_name, 'Active')))
+        self.user_name = input("Enter your name: ")
 
-            # Receive server answer to presence message
-            print(self.receive_server_response(s))
+        # Send presence message
+        self.send_message(json(get_presence_json(self.user_name, 'Active')))
 
-            message = input("Your message: ")
+        # Receive server answer to presence message
+        print(self.receive_server_response())
 
-            self.send_message(s, json(get_chatroom_message(chatroom='Agora',
-                                                           username=user_name,
-                                                           message=message)))
+        if self.rw_status == 'w':
+            self.start_writer_mode()
+        elif self.rw_status == 'r':
+            self.start_reader_mode()
 
-        s.close()
+        self.socket.close()
 
 
 if __name__ == "__main__":

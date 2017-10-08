@@ -87,5 +87,12 @@ class TestGetChatroomMessage(unittest.TestCase):
             are_equal_dicts(correct_message, function_message, 'time'))
 
 
+class TestGetQuit(unittest.TestCase):
+    def test_probe_json(self):
+        correct_message = {'action': 'quit'}
+        function_message = json_creator.get_quit()
+        self.assertTrue(
+            are_equal_dicts(correct_message, function_message))
+
 if __name__ == '__main__':
     unittest.main()
