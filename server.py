@@ -2,8 +2,9 @@
 from socket import socket, AF_INET, SOCK_STREAM
 from json_creator import json, get_empty_response_json, JimCode
 import argparse
-from log_config import log
+import log_config
 
+log = log_config.Log('server')
 
 class Server:
     def __init__(self):
@@ -12,6 +13,7 @@ class Server:
     def stop(self):
         self.stopped = True
 
+    @log
     def get_server_port(self, **main_args):
         if __name__ == "__main__":
             # Parse script arguments
@@ -25,6 +27,7 @@ class Server:
             server_port = main_args.get('p', 7777)
         return server_port
 
+    @log
     def get_ips_to_listen(self, **main_args):
         if __name__ == "__main__":
             # Parse script arguments
@@ -38,12 +41,14 @@ class Server:
             ip_to_listen = main_args.get('a', '')
         return ip_to_listen
 
+    @log
     def get_server_socket(self, server_port, max_connections):
         s = socket(AF_INET, SOCK_STREAM)
         s.bind(('', server_port))
         s.listen(max_connections)
         return s
 
+    @log
     def main(self, **main_args):
         server_port = self.get_server_port(**main_args)
         ip_to_listen = self.get_ips_to_listen(**main_args)

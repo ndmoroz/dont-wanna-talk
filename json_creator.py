@@ -1,6 +1,6 @@
 # Functions to create JIM messages
 
-import json
+import json as json_module
 from time import time
 
 
@@ -68,7 +68,7 @@ class JsonGenerator:
         return self.data
 
     def get_json(self):
-        return json.dumps(self.data)
+        return json_module.dumps(self.data)
 
 
 def get_presence_json(username, status):
@@ -118,4 +118,4 @@ def is_long_name(name):
 
 
 def json(func):
-    return json.dumps(func)
+    return json_module.dumps(func)
