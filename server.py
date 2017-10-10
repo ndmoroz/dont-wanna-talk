@@ -120,11 +120,6 @@ class Server:
                     client.close()
                     clients.remove(client)
 
-                    # while True:
-                    #     # Receive presence message
-                    #     client_message = self.get_client_message(client)
-                    #     print(client_message)
-
 
 if __name__ == "__main__":
     server = Server()

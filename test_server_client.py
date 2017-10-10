@@ -1,12 +1,56 @@
-from sys import executable
-from os.path import dirname
-from subprocess import Popen
+import unittest
+import subprocess
+from time import sleep
 
-# Define a command that starts new terminal
-new_window_command = "cmd.exe /c start".split()
 
-# Open new consoles, run server and client
-project_path = " " + dirname(__file__)
-echos = [executable, project_path, "/server.py"], \
-        [executable, project_path, "/client.py 127.0.0.1"]
-processes = [Popen(new_window_command + [echo]) for echo in echos]
+class TestServerClient(unittest.TestCase):
+    def test_reader_gets_writer_message(self):
+
+        try:
+            # Launching server, client-writer and client-reader
+            # specifying encoding to communicate in strings, not in bytes
+            server = subprocess.Popen(['python', 'server.py'],
+                                      stdout=subprocess.PIPE,
+                                      stdin=subprocess.PIPE,
+                                      stderr=subprocess.STDOUT,
+                                      encoding='utf-8')
+
+            writer = subprocess.Popen(
+                ['python', 'client.py', '-w', 'localhost'],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding='utf-8')
+
+            writer.stdin.write("writerName\n")
+            writer.stdin.flush()
+
+            reader = subprocess.Popen(
+                ['python', 'client.py', '-r', 'localhost'],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding='utf-8')
+
+            reader.stdin.write("readerName\n")
+            reader.stdin.flush()
+
+            writer.stdin.write("message1\n")
+            writer.stdin.flush()
+
+            while True:
+                reader_reception = reader.stdout.readline()
+                if "msg" in reader_reception:
+                    break
+
+            has_reader_received = \
+                '"from": "writerName", "message": "message1"' in reader_reception
+
+            self.assertTrue(has_reader_received)
+
+        except ResourceWarning:
+            pass
+
+
+if __name__ == '__main__':
+    unittest.main()
