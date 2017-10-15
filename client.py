@@ -1,6 +1,6 @@
 # Client program
 from socket import socket, AF_INET, SOCK_STREAM
-from json_creator import json, get_presence_json, get_chatroom_message
+from json_creator import json, get_presence_json, get_message
 import sys
 import log_config
 import argparse
@@ -46,9 +46,9 @@ class Client:
             if message == '\\\\\\':
                 break
             self.send_message(
-                json(get_chatroom_message(chatroom='Agora',
-                                          username=self.user_name,
-                                          message=message)))
+                json(get_message(chatroom='Agora',
+                                 username=self.user_name,
+                                 message=message)))
 
     @log
     def start_reader_mode(self):

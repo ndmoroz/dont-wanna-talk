@@ -75,13 +75,13 @@ class TestGetAutenticateMessage(unittest.TestCase):
         self.assertIsNone(function_message)
 
 
-class TestGetChatroomMessage(unittest.TestCase):
+class TestGetMessage(unittest.TestCase):
     def test_normal_case(self):
         correct_message = {'action': 'msg', 'time': time.time(),
                            'to': 'MainChat', 'from': 'Alice',
                            'message': 'I don\'t really wanna talk'}
         function_message = \
-            json_creator.get_chatroom_message('MainChat', 'Alice',
+            json_creator.get_message('MainChat', 'Alice',
                                               'I don\'t really wanna talk')
         self.assertTrue(
             are_equal_dicts(correct_message, function_message, 'time'))

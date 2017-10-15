@@ -1,18 +1,6 @@
-class JimMessage:
-    def __init__(self):
-        pass
-
-
-class Chat:
-    def __init__(self):
-        self.clients = []
-        self.messages = []
-
-
 class ChatController:
     def __init__(self):
         pass
-
 
 
 class ChatView:

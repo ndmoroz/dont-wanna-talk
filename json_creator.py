@@ -2,7 +2,7 @@
 
 import json as json_module
 from time import time
-
+from errors import NotMessageError
 
 class JimAction:
     presence = 'presence'  # i am online
@@ -80,62 +80,64 @@ class JsonGenerator:
         return json_module.dumps(self.data)
 
 
-def get_presence_json(username, status):
-    if is_long_name(username):
-        return
-    user_data = JsonGenerator()
-    user_data.add_account_name(username)
-    user_data.add_status(status)
+class MessageBuilder:
+    def get_presence_json(self, username, status):
+        if is_long_name(username):
+            return
+        user_data = JsonGenerator()
+        user_data.add_account_name(username)
+        user_data.add_status(status)
 
-    json_data = JsonGenerator()
-    json_data.add_action(JimAction.presence)
-    json_data.add_time()
-    json_data.add_type('status')
-    json_data.add_user(user_data)
-    return json_data.get_dict()
+        json_data = JsonGenerator()
+        json_data.add_action(JimAction.presence)
+        json_data.add_time()
+        json_data.add_type('status')
+        json_data.add_user(user_data)
+        return json_data.get_dict()
 
+    def get_probe_json(self):
+        json_data = JsonGenerator()
+        json_data.add_action(JimAction.probe)
+        json_data.add_time()
+        return json_data.get_dict()
 
-def get_probe_json():
-    json_data = JsonGenerator()
-    json_data.add_action(JimAction.probe)
-    json_data.add_time()
-    return json_data.get_dict()
+    def get_empty_response_json(self, response):
+        json_data = JsonGenerator()
+        json_data.add_response(response)
+        return json_data.get_dict()
 
+    def get_authenticate_json(self, username, password):
+        if is_long_name(username):
+            return
+        user_data = JsonGenerator()
+        user_data.add_account_name(username)
+        user_data.add_password(password)
 
-def get_empty_response_json(response):
-    json_data = JsonGenerator()
-    json_data.add_response(response)
-    return json_data.get_dict()
+        json_data = JsonGenerator()
+        json_data.add_action(JimAction.authenticate)
+        json_data.add_time()
+        json_data.add_user(user_data)
+        return json_data.get_dict()
 
+    def get_message(self, send_from, send_to, message):
+        jim_data = JsonGenerator()
+        jim_data.add_action(JimAction.msg)
+        jim_data.add_time()
+        jim_data.add_to(send_to)
+        jim_data.add_from(send_from)
+        jim_data.add_message(message)
+        return jim_data.get_dict()
 
-def get_authenticate_json(username, password):
-    if is_long_name(username):
-        return
-    user_data = JsonGenerator()
-    user_data.add_account_name(username)
-    user_data.add_password(password)
+    def get_quit(self):
+        jim_data = JsonGenerator()
+        jim_data.add_action(JimAction.quit)
+        return jim_data.get_dict()
 
-    json_data = JsonGenerator()
-    json_data.add_action(JimAction.authenticate)
-    json_data.add_time()
-    json_data.add_user(user_data)
-    return json_data.get_dict()
-
-
-def get_chatroom_message(chatroom, username, message):
-    jim_data = JsonGenerator()
-    jim_data.add_action(JimAction.msg)
-    jim_data.add_time()
-    jim_data.add_to(chatroom)
-    jim_data.add_from(username)
-    jim_data.add_message(message)
-    return jim_data.get_dict()
-
-
-def get_quit():
-    jim_data = JsonGenerator()
-    jim_data.add_action(JimAction.quit)
-    return jim_data.get_dict()
+    def get_message_text(self, message_dict):
+        if is_message(message_dict):
+            return message_dict['message']
+        else:
+            raise NotMessageError(message_dict)
 
 
 def is_long_name(name):
@@ -144,3 +146,7 @@ def is_long_name(name):
 
 def json(func):
     return json_module.dumps(func)
+
+
+def dejson(func):
+    return json_module.loads(func)
