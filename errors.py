@@ -13,3 +13,11 @@ class LongUsernameError(Exception):
     def __str__(self):
         return 'Name {} is too long: {} symbols, maximum allowed is 25'.format(
             self.username, len(self.username))
+
+
+class WrongResponseCodeError(Exception):
+    def __init__(self, code):
+        self.code = code
+
+    def __str__(self):
+        return 'Wrong response code: {}'.format(self.code)

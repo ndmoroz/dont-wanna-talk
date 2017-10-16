@@ -2,19 +2,46 @@
 
 import json as json_module
 from time import time
-from errors import NotMessageError
+from errors import NotMessageError, LongUsernameError, WrongResponseCodeError
 
-class JimAction:
+
+class Enum:
+    def __contains__(self, item):
+        return item in {value for attr, value in
+                        zip(self.__class__.__dict__.keys(),
+                            self.__class__.__dict__.values())
+                        if not attr.startswith('__')}
+
+
+class JimField(Enum):
+    action = 'action'  # what to do
+    time = 'time'  # current unix-time
+    user = 'user'  # who does action
+    type = 'type'  # presence message type
+    user_name = 'account_name'  # user subfield
+    user_password = 'password'  # user subfield
+    user_status = 'status'  # user subfield - presence message
+    response = 'response'  # server response
+    alert = 'alert'  # server warns
+    error = 'error'  # server can't do
+    sendto = 'to'  # send message to
+    sendfrom = 'from'  # who sends message
+    encoding = 'encoding'  # encoding of message text
+    message = 'message'  # message text
+    chatroom = 'room'  # chat room to join or leave
+
+
+class JimAction(Enum):
     presence = 'presence'  # i am online
     probe = 'probe'  # are you online?
     msg = 'msg'  # i send message
     quit = 'quit'  # i disconnect
     authenticate = 'authenticate'  # sign me in
     join = 'join'  # i join chat
-    leave = 'leave'  # i leave
+    leave = 'leave'  # i leave chatroom
 
 
-class JimCode:
+class JimCode(Enum):
     standard_notification = 100
     important_notification = 101
     ok = 200
@@ -30,114 +57,102 @@ class JimCode:
     server_error = 500
 
 
-class JsonGenerator:
-    def __init__(self):
-        self.data = {}
-
-    def add_action(self, action):
-        self.data['action'] = action
-
-    def add_time(self):
-        self.data['time'] = time()
-
-    def add_type(self, type):
-        self.data['type'] = type
-
-    def add_user(self, user):
-        self.data['user'] = user.data
-
-    def add_account_name(self, account_name):
-        self.data['account_name'] = account_name
-
-    def add_status(self, status):
-        self.data['status'] = status
-
-    def add_password(self, password):
-        self.data['password'] = password
-
-    def add_response(self, response):
-        self.data['response'] = response
-
-    def add_alert(self, alert):
-        self.data['alert'] = alert
-
-    def add_error(self, error):
-        self.data['error'] = error
-
-    def add_to(self, destination):
-        self.data['to'] = destination
-
-    def add_from(self, author):
-        self.data['from'] = author
-
-    def add_message(self, message):
-        self.data['message'] = message
-
-    def get_dict(self):
-        return self.data
-
-    def get_json(self):
-        return json_module.dumps(self.data)
+def get_presence_message(username, *status):
+    if is_long_name(username):
+        raise LongUsernameError(username)
+    if status:
+        user = {JimField.user_name: username,
+                JimField.user_status: status[0]}
+        message = {JimField.action: JimAction.presence,
+                   JimField.time: time(),
+                   JimField.type: JimField.user_status,
+                   JimField.user: user}
+    else:
+        user = {JimField.user_name: username}
+        message = {JimField.action: JimAction.presence,
+                   JimField.time: time(),
+                   JimField.user: user}
+    return message
 
 
-class MessageBuilder:
-    def get_presence_json(self, username, status):
-        if is_long_name(username):
-            return
-        user_data = JsonGenerator()
-        user_data.add_account_name(username)
-        user_data.add_status(status)
+def get_probe_message():
+    message = {JimField.action: JimAction.probe,
+               JimField.time: time()}
+    return message
 
-        json_data = JsonGenerator()
-        json_data.add_action(JimAction.presence)
-        json_data.add_time()
-        json_data.add_type('status')
-        json_data.add_user(user_data)
-        return json_data.get_dict()
 
-    def get_probe_json(self):
-        json_data = JsonGenerator()
-        json_data.add_action(JimAction.probe)
-        json_data.add_time()
-        return json_data.get_dict()
+def get_response_message(response_code, **message):
+    if (response_code not in JimCode()):
+        raise WrongResponseCodeError(response_code)
+    if 'alert' in message:
+        message = {JimField.response: response_code,
+                   JimField.alert: message['alert']}
+    elif 'error' in message:
+        message = {JimField.response: response_code,
+                   JimField.error: message['error']}
+    else:
+        message = {JimField.response: response_code}
 
-    def get_empty_response_json(self, response):
-        json_data = JsonGenerator()
-        json_data.add_response(response)
-        return json_data.get_dict()
+    return message
 
-    def get_authenticate_json(self, username, password):
-        if is_long_name(username):
-            return
-        user_data = JsonGenerator()
-        user_data.add_account_name(username)
-        user_data.add_password(password)
 
-        json_data = JsonGenerator()
-        json_data.add_action(JimAction.authenticate)
-        json_data.add_time()
-        json_data.add_user(user_data)
-        return json_data.get_dict()
+def get_authenticate_message(username, password):
+    if is_long_name(username):
+        raise LongUsernameError(username)
+    user = {JimField.user_name: username,
+            JimField.user_password: password}
+    message = {JimField.action: JimAction.authenticate,
+               JimField.time: time(),
+               JimField.user: user}
+    return message
 
-    def get_message(self, send_from, send_to, message):
-        jim_data = JsonGenerator()
-        jim_data.add_action(JimAction.msg)
-        jim_data.add_time()
-        jim_data.add_to(send_to)
-        jim_data.add_from(send_from)
-        jim_data.add_message(message)
-        return jim_data.get_dict()
 
-    def get_quit(self):
-        jim_data = JsonGenerator()
-        jim_data.add_action(JimAction.quit)
-        return jim_data.get_dict()
+def get_message(send_to, send_from, message, encoding='utf-8'):
+    if is_long_name(send_from):
+        raise LongUsernameError(send_from)
+    if is_long_name(send_to):
+        raise LongUsernameError(send_to)
+    message = {JimField.action: JimAction.msg,
+               JimField.time: time(),
+               JimField.sendto: send_to,
+               JimField.sendfrom: send_from,
+               JimField.encoding: encoding,
+               JimField.message: message}
+    return message
 
-    def get_message_text(self, message_dict):
-        if is_message(message_dict):
-            return message_dict['message']
-        else:
-            raise NotMessageError(message_dict)
+
+def get_message_text(message_dict):
+    if is_message(message_dict):
+        return message_dict['message']
+    else:
+        raise NotMessageError(message_dict)
+
+
+def get_message_sendto(message_dict):
+    if is_message(message_dict):
+        return message_dict['to']
+    else:
+        raise NotMessageError(message_dict)
+
+
+def get_message_sendfrom(message_dict):
+    if is_message(message_dict):
+        return message_dict['from']
+    else:
+        raise NotMessageError(message_dict)
+
+
+def get_quit_message():
+    message = {JimField.action: JimAction.quit}
+    return message
+
+
+def is_message(message):
+    is_action_msg = ('action' in message) and \
+                    (message['action'] == JimAction.msg)
+    has_to_and_from = ('to' in message) and ('from' in message)
+    has_message = 'message' in message
+    return is_action_msg and has_to_and_from and has_message
 
 
 def is_long_name(name):
