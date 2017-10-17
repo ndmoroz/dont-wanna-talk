@@ -44,7 +44,8 @@ class TestServerClient(unittest.TestCase):
                     break
 
             has_reader_received = \
-                '"from": "writerName", "message": "message1"' in reader_reception
+                '"from": "writerName"' in reader_reception and \
+                '"message": "message1"' in reader_reception
 
             self.assertTrue(has_reader_received)
 

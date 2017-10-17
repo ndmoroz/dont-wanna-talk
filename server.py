@@ -1,6 +1,6 @@
 # Server program
 from socket import socket, AF_INET, SOCK_STREAM
-from json_creator import json, get_empty_response_json, JimCode
+from json_creator import json, get_response_message, JimCode
 import argparse
 import log_config
 from select import select
@@ -88,7 +88,7 @@ class Server:
 
                 # Send OK answer
                 self.send_client_message(client,
-                                         json(get_empty_response_json(
+                                         json(get_response_message(
                                              JimCode.ok)))
 
                 clients.append(client)

@@ -1,6 +1,6 @@
 # Client program
 from socket import socket, AF_INET, SOCK_STREAM
-from json_creator import json, get_presence_json, get_message
+from json_creator import json, get_presence_message, get_message
 import sys
 import log_config
 import argparse
@@ -46,8 +46,8 @@ class Client:
             if message == '\\\\\\':
                 break
             self.send_message(
-                json(get_message(chatroom='Agora',
-                                 username=self.user_name,
+                json(get_message(send_to='Agora',
+                                 send_from=self.user_name,
                                  message=message)))
 
     @log
@@ -69,7 +69,7 @@ class Client:
         self.user_name = input("Enter your name: ")
 
         # Send presence message
-        self.send_message(json(get_presence_json(self.user_name, 'Active')))
+        self.send_message(json(get_presence_message(self.user_name, 'Active')))
 
         # Receive server answer to presence message
         print(self.receive_server_response())
