@@ -42,9 +42,3 @@ class Server:
         self.clients = []
         self.chats = []
         self.storage
-
-
-class Client:
-    def __init__(self):
-        self.server
-        self.chat_view
