@@ -21,3 +21,11 @@ class WrongResponseCodeError(Exception):
 
     def __str__(self):
         return 'Wrong response code: {}'.format(self.code)
+
+
+class UnknownMessageFormatError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return 'Unknown type of message: {}'.format(self.message)

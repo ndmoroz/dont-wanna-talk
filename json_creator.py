@@ -2,7 +2,11 @@
 
 import json as json_module
 from time import time
-from errors import NotMessageError, LongUsernameError, WrongResponseCodeError
+from errors import \
+    NotMessageError, \
+    LongUsernameError, \
+    WrongResponseCodeError, \
+    UnknownMessageFormatError
 
 
 class Enum:
@@ -165,3 +169,18 @@ def json(func):
 
 def dejson(func):
     return json_module.loads(func)
+
+
+def get_message_type(message):
+    try:
+        return message[JimField.action]
+    except:
+        raise UnknownMessageFormatError(message)
+
+
+def get_username(message):
+    try:
+        user = message[JimField.user]
+        return user[JimField.user_name]
+    except:
+        raise UnknownMessageFormatError(message)
