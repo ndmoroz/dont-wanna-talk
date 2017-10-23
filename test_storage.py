@@ -11,20 +11,27 @@ class TestServerTable(unittest.TestCase):
         session = sessionmaker(bind=self.engine)
         storage.Base.metadata.create_all(self.engine)
         self.session = session()
+        self.client1 = storage.ClientServerTable \
+            ('FirstInTable', 'Not very sociable')
+        self.client2 = storage.ClientServerTable \
+            ('SecondComing', 'Not very sociable either')
+        self.session.add(self.client1)
+        self.session.add(self.client2)
+        self.session.commit()
 
     def tearDown(self):
         storage.Base.metadata.drop_all(self.engine)
 
-    def test_create_client(self):
-        self.client = storage.ClientServerTable \
-            ('FirstInTable', 'Not very sociable')
-        self.session.add(self.client)
-        self.session.commit()
-        expected = [self.client]
+    def test_reading_two_clients(self):
         result = self.session.query(storage.ClientServerTable).all()
-        self.assertEqual(result, expected)
+        client = result[0]
+        self.assertEqual(client.username, self.client1.username)
+        self.assertEqual(client.info, self.client1.info)
+        client = result[1]
+        self.assertEqual(client.username, self.client2.username)
+        self.assertEqual(client.info, self.client2.info)
 
-    def test_create_client(self):
+    def test_writing_reading_client_history(self):
         self.history = storage.ClientHistoryServerTable \
             (1, '192.168.0.1', datetime.datetime.utcnow())
         self.session.add(self.history)
