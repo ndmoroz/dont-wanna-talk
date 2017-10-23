@@ -1,10 +1,11 @@
 # Server program
 from socket import socket, AF_INET, SOCK_STREAM
-from json_creator import json, get_response_message, JimCode
+from json_creator import get_message_type, JimAction, get_username
 import argparse
 import log_config
-from select import select
 from socketserver import TCPServer, StreamRequestHandler, ThreadingMixIn
+from storage import ServerStorage
+from ast import literal_eval as str_to_dict
 
 log = log_config.Log('server')
 
@@ -17,6 +18,9 @@ class MessageHandler(StreamRequestHandler):
             data = self.rfile.readline().strip()
             client_message = data.decode('utf-8')
             print(client_message)
+            client_message_dict = str_to_dict(client_message)
+            self.server.parse_client_message(
+                client_message_dict, self.client_address[0])
             self.server.write_to_clients(client_message)
         self.server.remove_client(self)
         print('Client disconnected - {}:{}'.format(*self.client_address))
@@ -29,6 +33,7 @@ class Server(ThreadingMixIn, TCPServer):
     def __init__(self, server_address, request_handler_class):
         super().__init__(server_address, request_handler_class, True)
         self.clients = set()
+        self.storage = ServerStorage()
 
     def add_client(self, client):
         self.clients.add(client)
@@ -39,6 +44,14 @@ class Server(ThreadingMixIn, TCPServer):
     def write_to_clients(self, message):
         for client in self.clients:
             client.wfile.write((message + '\n').encode('utf-8'))
+
+    def parse_client_message(self, message, ip):
+        message_type = get_message_type(message)
+        if message_type == JimAction.presence:
+            self.register_client_connect(get_username(message), ip)
+
+    def register_client_connect(self, username, ip):
+        self.storage.save_client_connect(username, ip)
 
 
 @log

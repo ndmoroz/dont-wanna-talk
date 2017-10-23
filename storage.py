@@ -1,11 +1,48 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy import create_engine, exists
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime
 
-Base = declarative_base()
+ServerBase = declarative_base()
+ClientBase = declarative_base()
 
 
-class ClientServerTable(Base):
+class ServerStorage:
+    def __init__(self):
+        engine = create_engine('sqlite:///server.sqlite')
+        session = sessionmaker(bind=engine)
+        ServerBase.metadata.create_all(engine)
+        self.session = session()
+
+    def save_client_connect(self, username, ip):
+        client_id = self._get_client_id(username)
+        if client_id is None:
+            self.save_new_client(username)
+            client_id = self._get_client_id(username)
+        history = ClientHistoryServerTable(client_id, ip, datetime.utcnow())
+        self.session.add(history)
+        self._save_changes()
+
+    def save_new_client(self, username):
+        info = 'First connect (UTC): ' + str(datetime.utcnow())
+        client = ClientServerTable(username, info)
+        self.session.add(client)
+        self._save_changes()
+
+    def _get_client_id(self, username):
+        client = self.session.query(ClientServerTable)
+        client = client.filter(ClientServerTable.username == username)
+        client = client.first()
+        if client is not None:
+            return client.client_id
+
+    def _save_changes(self):
+        self.session.commit()
+
+
+class ClientServerTable(ServerBase):
     __tablename__ = 'client'
 
     client_id = Column(Integer, primary_key=True)
@@ -17,7 +54,7 @@ class ClientServerTable(Base):
         self.info = info
 
 
-class ClientHistoryServerTable(Base):
+class ClientHistoryServerTable(ServerBase):
     __tablename__ = 'client_history'
 
     client_history_id = Column(Integer, primary_key=True)
@@ -31,7 +68,7 @@ class ClientHistoryServerTable(Base):
         self.login_time = time
 
 
-class ClientFriendsServerTable(Base):
+class ClientFriendsServerTable(ServerBase):
     __tablename__ = 'client_friend'
 
     client_friend_id = Column(Integer, primary_key=True)
@@ -43,7 +80,7 @@ class ClientFriendsServerTable(Base):
         self.friend_id = friend_id
 
 
-class FriendsClientTable(Base):
+class FriendsClientTable(ClientBase):
     __tablename__ = 'friend'
 
     friend_id = Column(Integer, primary_key=True)
@@ -53,7 +90,7 @@ class FriendsClientTable(Base):
         self.friend_name = friend_name
 
 
-class HistoryClientTable(Base):
+class HistoryClientTable(ClientBase):
     __tablename__ = 'history'
 
     history_id = Column(Integer, primary_key=True)

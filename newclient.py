@@ -1,7 +1,6 @@
 # Client program
 from socket import socket, AF_INET, SOCK_STREAM
 from json_creator import json, get_presence_message, get_message
-import sys
 import log_config
 import argparse
 
