@@ -3,13 +3,14 @@ from socket import socket, AF_INET, SOCK_STREAM
 from json_creator import json, get_presence_message, get_message
 import log_config
 import argparse
+from gui.qt_chat_view import QtChatView
 
 log = log_config.Log('client')
 
 
 class Client:
     def __init__(self):
-        pass
+        self.view = QtChatView()
 
     @log
     def parse_arguments(self):
@@ -67,7 +68,9 @@ class Client:
         self.rfile = self.socket.makefile('rb', -1)
         self.wfile = self.socket.makefile('wb', 0)
 
-        self.user_name = input("Enter your name: ")
+        # self.user_name = input("Enter your name: ")
+
+        self.user_name = self.view.get_username()
 
         # Send presence message
         self.send_message(json(get_presence_message(self.user_name, 'Active')))
