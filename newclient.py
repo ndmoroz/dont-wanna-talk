@@ -11,6 +11,7 @@ log = log_config.Log('client')
 class Client:
     def __init__(self):
         self.view = QtChatView()
+        self.view.set_client(self)
 
     @log
     def parse_arguments(self):
@@ -41,19 +42,19 @@ class Client:
 
     @log
     def start_writer_mode(self):
-        while True:
-            message = input('Your message ("\\\\\\" to exit): ')
-            if message == '\\\\\\':
-                break
-            self.send_message(
-                json(get_message(send_to='Agora',
-                                 send_from=self.user_name,
-                                 message=message)))
+        self.view.show_chat()
+
+    def write_message(self, message):
+        self.send_message(
+            json(get_message(send_to='Agora',
+                             send_from=self.user_name,
+                             message=message)))
 
     @log
     def start_reader_mode(self):
-        while True:
-            print(self.receive_server_response())
+        self.view.show_chat()
+        # while True:
+        #     self.view.print_message(self.receive_server_response())
 
     @log
     def main(self):
