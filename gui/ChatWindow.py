@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading _ui file 'ChatWindow._ui'
+# Form implementation generated from reading ui file 'ChatWindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_ChatMainWindow(object):
     def setupUi(self, ChatMainWindow):
@@ -46,6 +45,8 @@ class Ui_ChatMainWindow(object):
         self.ContactsListWidget.setSizePolicy(sizePolicy)
         self.ContactsListWidget.setMinimumSize(QtCore.QSize(75, 0))
         self.ContactsListWidget.setBaseSize(QtCore.QSize(0, 0))
+        self.ContactsListWidget.setContextMenuPolicy(
+            QtCore.Qt.ActionsContextMenu)
         self.ContactsListWidget.setObjectName("ContactsListWidget")
         self.verticalLayout_3.addWidget(self.ContactsListWidget)
         self.verticalLayoutWidget_2 = QtWidgets.QWidget(self.splitter)
@@ -128,14 +129,15 @@ class Ui_ChatMainWindow(object):
         self.horizontalLayout_4.addWidget(self.SendButton)
         self.verticalLayout_2.addWidget(self.splitter_2)
         self.gridLayout.addWidget(self.splitter, 0, 0, 1, 1)
-        self.splitter.raise_()
-        self.ChatPlainTextEdit.raise_()
-        self.verticalLayoutWidget_2.raise_()
-        self.verticalLayoutWidget_3.raise_()
-        self.horizontalLayoutWidget_3.raise_()
-        self.horizontalLayoutWidget_4.raise_()
-        self.ContactsListWidget.raise_()
         ChatMainWindow.setCentralWidget(self.centralwidget)
+        self.action_add_friend = QtWidgets.QAction(ChatMainWindow)
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/img/add_user_icon"),
+                       QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.action_add_friend.setIcon(icon)
+        self.action_add_friend.setObjectName("action_add_friend")
+
+        self.ContactsListWidget.addAction(self.action_add_friend)
 
         self.retranslateUi(ChatMainWindow)
         self.ChatsTabWidget.setCurrentIndex(0)
@@ -148,3 +150,10 @@ class Ui_ChatMainWindow(object):
         self.ChatsTabWidget.setTabText(self.ChatsTabWidget.indexOf(self.tab),
                                        _translate("ChatMainWindow", "Tab 1"))
         self.SendButton.setText(_translate("ChatMainWindow", "Send"))
+        self.action_add_friend.setText(
+            _translate("ChatMainWindow", "Add friend"))
+        self.action_add_friend.setToolTip(_translate("ChatMainWindow",
+                                                     "Adds new friend to your contact list"))
+
+
+import gui.Icons

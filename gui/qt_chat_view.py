@@ -36,9 +36,8 @@ class ChatWindow(QtWidgets.QMainWindow):
         self._create_new_tab()
         self._ui.ChatsTabWidget.removeTab(0)
         self._ui.SendButton.clicked.connect(self.get_new_message)
-        self._ui.ChatsTabWidget.tabBarClicked.connect \
-            (self.read_new_message)
-        # self._ui.SendButton.clicked.connect(self.add_contact)
+        self._ui.ChatsTabWidget.tabBarClicked.connect(self.read_new_message)
+        self._ui.action_add_friend.triggered.connect(self.add_contact)
         # self._ui.SendButton.clicked.connect(self._create_new_tab)
 
     def get_new_message(self):
@@ -56,8 +55,13 @@ class ChatWindow(QtWidgets.QMainWindow):
         self._ui.ChatPlainTextEdit.moveCursor(QtGui.QTextCursor.End)
 
     def add_contact(self):
-        self._ui.ContactsListWidget.addItem(
-            self._ui.MessagePlainTextEdit.toPlainText())
+        items = ("friend1", "friend2", "friend3")
+
+        item, ok = QtWidgets.QInputDialog.getItem(
+            self, "select input dialog", "list of languages", items, 0, False)
+
+        if ok and item:
+            self._ui.ContactsListWidget.addItem(item)
 
     def _create_new_tab(self):
         newTab = ChatTab()
