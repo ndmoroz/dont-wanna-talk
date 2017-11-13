@@ -55,11 +55,10 @@ class ChatWindow(QtWidgets.QMainWindow):
         self._ui.ChatPlainTextEdit.moveCursor(QtGui.QTextCursor.End)
 
     def add_contact(self):
-        items = ("friend1", "friend2", "friend3")
-
+        # items = ("friend1", "friend2", "friend3")
+        items = self.client.get_all_contacts()
         item, ok = QtWidgets.QInputDialog.getItem(
             self, "select input dialog", "list of languages", items, 0, False)
-
         if ok and item:
             self._ui.ContactsListWidget.addItem(item)
 

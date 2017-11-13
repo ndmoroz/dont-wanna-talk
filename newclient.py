@@ -1,6 +1,12 @@
 # Client program
 from socket import socket, AF_INET, SOCK_STREAM
-from json_creator import json, get_presence_message, get_message
+from json_creator import \
+    json, \
+    get_presence_message, \
+    get_message, \
+    get_all_contacts_message, \
+    get_quantity, \
+    get_contact_name
 import log_config
 import argparse
 from gui.qt_chat_view import QtChatView
@@ -18,7 +24,7 @@ class Client:
         arg_parser = argparse.ArgumentParser()
         arg_parser.add_argument('-r', action='count')
         arg_parser.add_argument('-w', action='count')
-        arg_parser.add_argument('ip')
+        arg_parser.add_argument('ip', nargs='?', default='localhost')
         arg_parser.add_argument('port', nargs='?', default=7777)
         arguments = arg_parser.parse_args()
         print(arguments)
@@ -36,13 +42,29 @@ class Client:
     def send_message(self, message):
         self.wfile.write((message + '\n').encode('utf-8'))
 
+    def send_message_old(self, message):
+        self.socket.sendall(bytes(message, 'utf-8'))
+
     @log
     def receive_server_response(self):
         return self.rfile.readline().strip().decode('utf-8')
 
+    def receive_server_response_old(self):
+        return str(self.socket.recv(1024), 'utf-8')
+
     @log
     def start_writer_mode(self):
         self.view.show_chat()
+
+    def get_all_contacts(self):
+        self.send_message(json(get_all_contacts_message()))
+        contact_count = None
+        while contact_count is None:
+            contact_count = get_quantity(self.receive_server_response())
+        contacts = []
+        for i in contact_count:
+            contacts.append(get_contact_name(self.receive_server_response()))
+        return contacts
 
     def write_message(self, message):
         self.send_message(

@@ -33,6 +33,8 @@ class JimField(Enum):
     encoding = 'encoding'  # encoding of message text
     message = 'message'  # message text
     chatroom = 'room'  # chat room to join or leave
+    quantity = 'quantity'  # how many of something
+    user_id = 'user_id'  # nickname for contact list
 
 
 class JimAction(Enum):
@@ -43,6 +45,9 @@ class JimAction(Enum):
     authenticate = 'authenticate'  # sign me in
     join = 'join'  # i join chat
     leave = 'leave'  # i leave chatroom
+    get_contacts = 'get_contacts_message'  # send me my friends
+    get_all_contacts = 'get_all_contacts_message'  # send me all contacts
+    contact_list = 'contact_list'  # here's a contact for the contact list
 
 
 class JimCode(Enum):
@@ -148,6 +153,45 @@ def get_message_sendfrom(message_dict):
 
 def get_quit_message():
     message = {JimField.action: JimAction.quit}
+    return message
+
+
+def get_all_contacts_message():
+    message = {JimField.action: JimAction.get_all_contacts,
+               JimField.time: time()}
+    return message
+
+
+def get_contacts_message():
+    message = {JimField.action: JimAction.get_contacts,
+               JimField.time: time()}
+    return message
+
+
+def get_quantity_message(count):
+    message = {JimField.response: JimCode.accepted,
+               JimField.quantity: count}
+    return message
+
+
+def get_quantity(message):
+    return message[JimField.quantity]
+
+
+def get_quantity(message):
+    if JimField.quantity in message:
+        return message[JimField.quantity]
+
+
+def get_contact_name(message):
+    if JimField.action in message and \
+                    message[JimField.action] == JimAction.contact_list:
+        return message[JimField.user_id]
+
+
+def get_contact_message(username):
+    message = {JimField.action: JimAction.contact_list,
+               JimField.user_id: username}
     return message
 
 

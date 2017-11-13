@@ -38,6 +38,10 @@ class ServerStorage:
         if client is not None:
             return client.client_id
 
+    def get_all_contacts(self):
+        client = self.session.query(ClientServerTable).all()
+        return client.username
+
     def _save_changes(self):
         self.session.commit()
 

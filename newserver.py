@@ -19,9 +19,8 @@ class MessageHandler(StreamRequestHandler):
             client_message = data.decode('utf-8')
             print(client_message)
             client_message_dict = str_to_dict(client_message)
-            self.server.parse_client_message(
-                client_message_dict, self.client_address[0])
-            self.server.write_to_clients(client_message)
+            self.server.parse_client_message(self, client_message_dict)
+            self.server.write_to_all_clients(client_message)
         self.server.remove_client(self)
         print('Client disconnected - {}:{}'.format(*self.client_address))
 
@@ -41,17 +40,28 @@ class Server(ThreadingMixIn, TCPServer):
     def remove_client(self, client):
         self.clients.remove(client)
 
-    def write_to_clients(self, message):
-        for client in self.clients:
-            client.wfile.write((message + '\n').encode('utf-8'))
+    def write_to_client(self, client, message):
+        client.wfile.write((message + '\n').encode('utf-8'))
 
-    def parse_client_message(self, message, ip):
+    def write_to_all_clients(self, message):
+        for client in self.clients:
+            self.write_to_client(client, message)
+
+    def parse_client_message(self, client, message):
+        ip = client.client_address[0]
         message_type = get_message_type(message)
         if message_type == JimAction.presence:
             self.register_client_connect(get_username(message), ip)
+        elif message == JimAction.get_all_contacts:
+            self._send_all_contacts(client)
 
     def register_client_connect(self, username, ip):
         self.storage.save_client_connect(username, ip)
+
+    def _send_all_contacts(self, client):
+        all_contacts = self.storage.get_all_contacts
+        for contact in all_contacts:
+            self.write_to_client(client, contact)
 
 
 @log
