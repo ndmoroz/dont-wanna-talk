@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine, exists
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, load_only
 from datetime import datetime
 
 ServerBase = declarative_base()
@@ -39,8 +39,11 @@ class ServerStorage:
             return client.client_id
 
     def get_all_contacts(self):
-        client = self.session.query(ClientServerTable).all()
-        return client.username
+        clients = []
+        for client in self.session. \
+                query(ClientServerTable).options(load_only("username")):
+            clients.append(client.username)
+        return clients
 
     def _save_changes(self):
         self.session.commit()

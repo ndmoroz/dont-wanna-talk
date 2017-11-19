@@ -57,7 +57,8 @@ class Client:
         self.view.show_chat()
 
     def get_all_contacts(self):
-        self.send_message(json(get_all_contacts_message()))
+        get_contacts_message = json(get_all_contacts_message())
+        self.send_message(get_contacts_message)
         contact_count = None
         while contact_count is None:
             contact_count = get_quantity(self.receive_server_response())

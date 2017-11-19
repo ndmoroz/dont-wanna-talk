@@ -52,14 +52,14 @@ class Server(ThreadingMixIn, TCPServer):
         message_type = get_message_type(message)
         if message_type == JimAction.presence:
             self.register_client_connect(get_username(message), ip)
-        elif message == JimAction.get_all_contacts:
+        elif message_type == JimAction.get_all_contacts:
             self._send_all_contacts(client)
 
     def register_client_connect(self, username, ip):
         self.storage.save_client_connect(username, ip)
 
     def _send_all_contacts(self, client):
-        all_contacts = self.storage.get_all_contacts
+        all_contacts = self.storage.get_all_contacts()
         for contact in all_contacts:
             self.write_to_client(client, contact)
 

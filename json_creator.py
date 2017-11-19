@@ -45,8 +45,8 @@ class JimAction(Enum):
     authenticate = 'authenticate'  # sign me in
     join = 'join'  # i join chat
     leave = 'leave'  # i leave chatroom
-    get_contacts = 'get_contacts_message'  # send me my friends
-    get_all_contacts = 'get_all_contacts_message'  # send me all contacts
+    get_contacts = 'get_contacts'  # send me my friends
+    get_all_contacts = 'get_all_contacts'  # send me all contacts
     contact_list = 'contact_list'  # here's a contact for the contact list
 
 
