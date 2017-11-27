@@ -41,6 +41,7 @@ class Server(ThreadingMixIn, TCPServer):
         self.clients.remove(client)
 
     def write_to_client(self, client, message):
+        print('Sent:', message)
         client.wfile.write((message + '\n').encode('utf-8'))
 
     def write_to_all_clients(self, message):
@@ -60,7 +61,12 @@ class Server(ThreadingMixIn, TCPServer):
 
     def _send_all_contacts(self, client):
         all_contacts = self.storage.get_all_contacts()
+        contacts = []
         for contact in all_contacts:
+            contacts.append(contact)
+        contacts_count = len(contacts)
+        self.write_to_client(client, str(contacts_count))
+        for contact in contacts:
             self.write_to_client(client, contact)
 
 

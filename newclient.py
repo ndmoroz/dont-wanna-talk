@@ -10,8 +10,38 @@ from json_creator import \
 import log_config
 import argparse
 from gui.qt_chat_view import QtChatView
+from threading import Thread
 
 log = log_config.Log('client')
+
+
+class SendThread(Thread):
+    def __init__(self, client):
+        Thread.__init__(self)
+        self.client = client
+        self.is_stopped = False
+        self.setDaemon(True)
+
+    def run(self):
+        while not self.is_stopped:
+            msg = self.client.msg_queue.get()
+            print('sending:', msg)
+            self.client.sock.send(msg.utf8)
+            self.client.msg_queue.task_done()
+
+
+class ReceiveThread(Thread):
+    def __init__(self, client_socket):
+        Thread.__init__(self)
+        self.client = client
+        self.is_stopped = False
+        self.setDaemon(True)
+
+    def run(self):
+        while not self.is_stopped:
+            resp = self.client.rfile.readline().strip()
+            if resp:
+                print('Received:', resp.decode('utf-8'))
 
 
 class Client:
@@ -59,6 +89,8 @@ class Client:
     def get_all_contacts(self):
         get_contacts_message = json(get_all_contacts_message())
         self.send_message(get_contacts_message)
+        while True:
+            pass
         contact_count = None
         while contact_count is None:
             contact_count = get_quantity(self.receive_server_response())
@@ -66,6 +98,7 @@ class Client:
         for i in contact_count:
             contacts.append(get_contact_name(self.receive_server_response()))
         return contacts
+
 
     def write_message(self, message):
         self.send_message(
@@ -89,6 +122,7 @@ class Client:
 
         # Create socket and connect to server
         self.socket = self.get_client_socket()
+        self.socket.setblocking(False)
         self.rfile = self.socket.makefile('rb', -1)
         self.wfile = self.socket.makefile('wb', 0)
 
@@ -100,6 +134,9 @@ class Client:
         self.send_message(json(get_presence_message(self.user_name, 'Active')))
         # Receive server answer to presence message
         # print(self.receive_server_response())
+
+        self.recv_thread = ReceiveThread(self)
+        self.recv_thread.start()
 
         if self.rw_status == 'w':
             self.start_writer_mode()
