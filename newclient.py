@@ -40,14 +40,17 @@ class ReceiveThread(Thread):
     def run(self):
         while not self.is_stopped:
             resp = self.client.rfile.readline().strip()
+            message = resp.decode('utf-8')
+            self.client.messages.append(message)
             if resp:
-                print('Received:', resp.decode('utf-8'))
+                print('Received:', message)
 
 
 class Client:
     def __init__(self):
         self.view = QtChatView()
         self.view.set_client(self)
+        self.messages = []
 
     @log
     def parse_arguments(self):
@@ -89,16 +92,23 @@ class Client:
     def get_all_contacts(self):
         get_contacts_message = json(get_all_contacts_message())
         self.send_message(get_contacts_message)
-        while True:
-            pass
-        contact_count = None
-        while contact_count is None:
-            contact_count = get_quantity(self.receive_server_response())
         contacts = []
-        for i in contact_count:
-            contacts.append(get_contact_name(self.receive_server_response()))
+        i = 0
+        while True:
+            if len(self.messages) > i:
+                message = self.messages[i]
+                i = i + 1
+                if 'Start List' in message:
+                    break
+        while True:
+            if len(self.messages) > i:
+                message = self.messages[i]
+                print('Parsing [', message, ']')
+                if 'End List' in message:
+                    break
+                contacts.append(message)
+                i = i + 1
         return contacts
-
 
     def write_message(self, message):
         self.send_message(

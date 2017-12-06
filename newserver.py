@@ -65,9 +65,11 @@ class Server(ThreadingMixIn, TCPServer):
         for contact in all_contacts:
             contacts.append(contact)
         contacts_count = len(contacts)
+        self.write_to_client(client, 'Start List')
         self.write_to_client(client, str(contacts_count))
         for contact in contacts:
             self.write_to_client(client, contact)
+        self.write_to_client(client, 'End List')
 
 
 @log
