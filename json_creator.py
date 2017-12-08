@@ -48,6 +48,8 @@ class JimAction(Enum):
     get_contacts = 'get_contacts'  # send me my friends
     get_all_contacts = 'get_all_contacts'  # send me all contacts
     contact_list = 'contact_list'  # here's a contact for the contact list
+    add_friend = 'add_contact'  # add a new friend contact
+    delete_friend = 'del_contact'  # delete a friend contact
 
 
 class JimCode(Enum):
@@ -162,6 +164,20 @@ def get_all_contacts_message():
     return message
 
 
+def get_add_friend_message(friend_name):
+    message = {JimField.action: JimAction.add_friend,
+               JimField.user_id: str(friend_name),
+               JimField.time: time()}
+    return message
+
+
+def get_adding_friend_name(message):
+    try:
+        return message[JimField.user_id]
+    except:
+        raise UnknownMessageFormatError(message)
+
+
 def get_contacts_message():
     message = {JimField.action: JimAction.get_contacts,
                JimField.time: time()}
@@ -185,7 +201,7 @@ def get_quantity(message):
 
 def get_contact_name(message):
     if JimField.action in message and \
-                    message[JimField.action] == JimAction.contact_list:
+            message[JimField.action] == JimAction.contact_list:
         return message[JimField.user_id]
 
 

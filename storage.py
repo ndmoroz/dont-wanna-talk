@@ -11,16 +11,14 @@ ClientBase = declarative_base()
 
 class ServerStorage:
     def __init__(self):
-        engine = create_engine('sqlite:///server.sqlite')
+        engine = create_engine('sqlite:///server.sqlite',
+                               connect_args={'check_same_thread': False})
         session = sessionmaker(bind=engine)
         ServerBase.metadata.create_all(engine)
         self.session = session()
 
     def save_client_connect(self, username, ip):
-        client_id = self._get_client_id(username)
-        if client_id is None:
-            self.save_new_client(username)
-            client_id = self._get_client_id(username)
+        client_id = self.get_client_id(username)
         history = ClientHistoryServerTable(client_id, ip, datetime.utcnow())
         self.session.add(history)
         self._save_changes()
@@ -31,12 +29,24 @@ class ServerStorage:
         self.session.add(client)
         self._save_changes()
 
-    def _get_client_id(self, username):
+    def get_client_name(self, client_id):
+        client = self.session.query(ClientServerTable)
+        client = client.filter(ClientServerTable.client_id == client_id)
+        client = client.first()
+        if client is not None:
+            return client.username
+
+    def get_client_id(self, username):
         client = self.session.query(ClientServerTable)
         client = client.filter(ClientServerTable.username == username)
         client = client.first()
         if client is not None:
-            return client.client_id
+            client_id = client.client_id
+            if client_id is not None:
+                return client_id
+            else:
+                self.save_new_client(username)
+                return self.get_client_id(username)
 
     def get_all_contacts(self):
         clients = []
@@ -44,6 +54,22 @@ class ServerStorage:
                 query(ClientServerTable).options(load_only("username")):
             clients.append(client.username)
         return clients
+
+    def get_client_friends(self, client_id):
+        friends = []
+        friendships = self.session.query(ClientFriendsServerTable)
+        friendships = friendships.filter(
+            ClientFriendsServerTable.client_id == client_id)
+        friendships = friendships.options(load_only("friend_id"))
+        for friendship in friendships:
+            friends.append(self.get_client_name(friendship.friend_id))
+        return friends
+
+    def add_new_friend(self, client_id, friend_name):
+        friend_id = self.get_client_id(friend_name)
+        new_friendship = ClientFriendsServerTable(client_id, friend_id)
+        self.session.add(new_friendship)
+        self._save_changes()
 
     def _save_changes(self):
         self.session.commit()
@@ -82,7 +108,7 @@ class ClientFriendsServerTable(ServerBase):
     client_id = Column(Integer, ForeignKey('client.client_id'))
     friend_id = Column(Integer, ForeignKey('client.client_id'))
 
-    def __init__(self, client_id, ip, friend_id):
+    def __init__(self, client_id, friend_id):
         self.client_id = client_id
         self.friend_id = friend_id
 

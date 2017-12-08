@@ -16,27 +16,40 @@ from ast import literal_eval as str_to_dict
 
 
 class MessageHandler(StreamRequestHandler):
+    def _read_message(self):
+        try:
+            data = self.rfile.readline()
+        except:
+            return None
+        if not data:
+            return None
+        else:
+            data = data.strip()
+            client_message = data.decode('utf-8')
+            self.server.messages.append((self, client_message))
+            print(client_message)
+            return str_to_dict(client_message)
+
+
     def handle(self):
         print('Client connected - {}:{}'.format(*self.client_address))
-        self.server.add_client(self)
 
-        while True:
-            try:
-                data = self.rfile.readline()
-            except:
-                break
-            if not data:
-                break
-            else:
-                data = data.strip()
-                client_message = data.decode('utf-8')
-                self.server.messages.append((self, client_message))
-                print(client_message)
-                client_message_dict = str_to_dict(client_message)
-                self.server.parse_client_message(self, client_message_dict)
+        presence_message = self._read_message()
+        if presence_message is not None:
+            client_id = self.server.get_id_by_presence(presence_message)
+            self.server.add_client(self)
+
+            while True:
+                message = self._read_message()
+                if message is None:
+                    break
+                else:
+                    self.server.parse_client_message(self, client_id, message)
+
+            self.server.remove_client(self)
 
         print('Client disconnected - {}:{}'.format(*self.client_address))
-        self.server.remove_client(self)
+
 
 
 class Server(ThreadingTCPServer):
@@ -65,7 +78,7 @@ class Server(ThreadingTCPServer):
                 continue
             self.write_to_client(client, message)
 
-    def parse_client_message(self, client, message):
+    def parse_client_message(self, client, client_id, message):
         ip = client.client_address[0]
 
         message_type = get_message_type(message)
@@ -75,15 +88,23 @@ class Server(ThreadingTCPServer):
         elif message_type == JimAction.get_all_contacts:
             self._send_all_contacts(client)
 
+        elif message_type == JimAction.get_contacts:
+            self._send_client_contacts(client, client_id)
+
         elif message_type == JimAction.add_friend:
-            friend = get_adding_friend_name(message)
-            self._add_client_friend(client, friend)
+            friend_name = get_adding_friend_name(message)
+            self._add_client_friend(client_id, friend_name)
 
         elif message_type == JimAction.msg:
             self.write_to_all_clients(message, client)
 
     def register_client_connect(self, username, ip):
         self.storage.save_client_connect(username, ip)
+
+    def get_id_by_presence(self, presence_message):
+        client_name = get_username(presence_message)
+        client_id = self.storage.get_client_id(client_name)
+        return client_id
 
     def _send_all_contacts(self, client):
         all_contacts = self.storage.get_all_contacts()
@@ -92,13 +113,25 @@ class Server(ThreadingTCPServer):
             contacts.append(contact)
         contacts_count = len(contacts)
         self.write_to_client(client, 'Start List')
-        self.write_to_client(client, str(contacts_count))
+        # self.write_to_client(client, str(contacts_count))
         for contact in contacts:
             self.write_to_client(client, contact)
         self.write_to_client(client, 'End List')
 
-    def _add_client_friend(self, friend_name):
-        friend_id = self.storage.add_new_friend(new_friend, gets_friend)
+    def _send_client_contacts(self, client, client_id):
+        client_friends = self.storage.get_client_friends(client_id)
+        contacts = []
+        for contact in client_friends:
+            contacts.append(contact)
+        contacts_count = len(contacts)
+        self.write_to_client(client, 'Start List')
+        # self.write_to_client(client, str(contacts_count))
+        for contact in contacts:
+            self.write_to_client(client, contact)
+        self.write_to_client(client, 'End List')
+
+    def _add_client_friend(self, client_id, friend_name):
+        self.storage.add_new_friend(client_id, friend_name)
 
 
 def get_server_port(**main_args):

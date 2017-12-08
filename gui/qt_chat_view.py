@@ -35,14 +35,22 @@ class ChatWindow(QtWidgets.QMainWindow):
         self._ui.setupUi(self)
         self._create_new_tab()
         self._ui.ChatsTabWidget.removeTab(0)
+
         self._ui.SendButton.clicked.connect(self.get_new_message)
         self._ui.ChatsTabWidget.tabBarClicked.connect(self.read_new_message)
         self._ui.action_add_friend.triggered.connect(self.add_contact)
         # self._ui.SendButton.clicked.connect(self._create_new_tab)
 
+    def start(self):
+        friend_list = self.client.get_friend_list()
+        for friend in friend_list:
+            self._ui.ContactsListWidget.addItem(friend)
+        self.show()
+
     def get_new_message(self):
-        self.client.write_message(
-            self._ui.MessagePlainTextEdit.toPlainText())
+        message = self._ui.MessagePlainTextEdit.toPlainText()
+        self.print_my_message(message)
+        self.client.write_message(message)
         self._ui.MessagePlainTextEdit.clear()
 
     def read_new_message(self):
@@ -55,12 +63,17 @@ class ChatWindow(QtWidgets.QMainWindow):
         self._ui.ChatPlainTextEdit.moveCursor(QtGui.QTextCursor.End)
 
     def add_contact(self):
-        # items = ("friend1", "friend2", "friend3")
         items = self.client.get_all_contacts()
-        item, ok = QtWidgets.QInputDialog.getItem(
-            self, "select input dialog", "list of languages", items, 0, False)
+        item, ok = QtWidgets.QInputDialog. \
+            getItem(self,  # parent
+                    "Adding new friend",  # title
+                    "Friend to add",  # label
+                    items,  # items
+                    0,  # default
+                    False)  # editable
         if ok and item:
             self._ui.ContactsListWidget.addItem(item)
+            self.client.add_friend(item)
 
     def _create_new_tab(self):
         newTab = ChatTab()
@@ -79,7 +92,8 @@ class QtChatView:
         return self.login_window.username
 
     def show_chat(self):
-        self.chat_window.show()
+        self.chat_window.start()
+        # self.chat_window.show()
         self._app.exec_()
 
     def set_client(self, client_model):
