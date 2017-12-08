@@ -90,39 +90,38 @@ class Client:
         get_contacts_message = json(get_all_contacts_message())
         self.send_message(get_contacts_message)
         contacts = []
-        i = 0
         while True:
-            message = self.messages.pop()
-            if 'Start List' in message:
-                break
-        while True:
-            message = self.messages.pop()
-            if message:
-                print('Parsing [', message, ']')
-                if 'End List' in message:
+            if len(self.messages) > 0:
+                message = self.messages.pop()
+                if 'Start List' in message:
                     break
-                contacts.append(message)
+        while True:
+            if len(self.messages) > 0:
+                message = self.messages.pop()
+                if message:
+                    print('Parsing [', message, ']')
+                    if 'End List' in message:
+                        break
+                    contacts.append(message)
         return contacts
 
     def get_friend_list(self):
         get_friends_message = json(get_contacts_message())
         self.send_message(get_friends_message)
         contacts = []
-        i = 0
         while True:
-            if len(self.messages) > i:
-                message = self.messages[i]
-                i = i + 1
+            if len(self.messages) > 0:
+                message = self.messages.pop()
                 if 'Start List' in message:
                     break
         while True:
-            if len(self.messages) > i:
-                message = self.messages[i]
-                print('Parsing [', message, ']')
-                if 'End List' in message:
-                    break
-                contacts.append(message)
-                i = i + 1
+            if len(self.messages) > 0:
+                message = self.messages.pop()
+                if message:
+                    print('Parsing [', message, ']')
+                    if 'End List' in message:
+                        break
+                    contacts.append(message)
         return contacts
 
     def write_message(self, message):
