@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading _ui file 'ChatTab._ui'
+# Form implementation generated from reading ui file 'ChatTab.ui'
 #
 # Created by: PyQt5 UI code generator 5.9
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -25,6 +24,7 @@ class Ui_Form(object):
             self.ChatPlainTextEdit.sizePolicy().hasHeightForWidth())
         self.ChatPlainTextEdit.setSizePolicy(sizePolicy)
         self.ChatPlainTextEdit.setMinimumSize(QtCore.QSize(150, 20))
+        self.ChatPlainTextEdit.setReadOnly(True)
         self.ChatPlainTextEdit.setObjectName("ChatPlainTextEdit")
         self.gridLayout.addWidget(self.ChatPlainTextEdit, 0, 0, 1, 1)
 
@@ -34,3 +34,4 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("Form", "Form"))
+

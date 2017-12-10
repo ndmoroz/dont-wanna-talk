@@ -33,11 +33,12 @@ class ChatWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self._ui = Ui_ChatMainWindow()
         self._ui.setupUi(self)
-        self._create_new_tab()
+        self.current_tab = self._create_new_tab()
         self._ui.ChatsTabWidget.removeTab(0)
-
         self._ui.SendButton.clicked.connect(self.get_new_message)
-        self._ui.ChatsTabWidget.tabBarClicked.connect(self.read_new_message)
+        self._ui.SendButton.setShortcut('Ctrl+Return')
+        self._ui.SendButton.setToolTip('Ctrl+Enter')
+        # self._ui.ChatsTabWidget.tabBarClicked.connect(self.read_new_message)
         self._ui.action_add_friend.triggered.connect(self.add_contact)
         # self._ui.SendButton.clicked.connect(self._create_new_tab)
 
@@ -49,7 +50,7 @@ class ChatWindow(QtWidgets.QMainWindow):
 
     def get_new_message(self):
         message = self._ui.MessagePlainTextEdit.toPlainText()
-        self.print_my_message(message)
+        self.print_message(self.client.user_name, message)
         self.client.write_message(message)
         self._ui.MessagePlainTextEdit.clear()
 
@@ -57,15 +58,25 @@ class ChatWindow(QtWidgets.QMainWindow):
         self.print_message(
             self.client.rfile.readline().strip().decode('utf-8'))
 
-    def print_message(self, message):
-        self._ui.ChatPlainTextEdit.moveCursor(QtGui.QTextCursor.End)
-        self._ui.ChatPlainTextEdit.insertPlainText(message + '\n')
-        self._ui.ChatPlainTextEdit.moveCursor(QtGui.QTextCursor.End)
+    def print_message(self, user, message):
+        current_chat_text = self.current_tab.ui.ChatPlainTextEdit
+        current_chat_text.moveCursor(QtGui.QTextCursor.End)
+
+        bold_font = QtGui.QTextCharFormat()
+        bold_font.setFontWeight(QtGui.QFont.Bold)
+        current_chat_text.setCurrentCharFormat(bold_font)
+        current_chat_text.insertPlainText(user + '>')
+
+        normal_font = QtGui.QTextCharFormat()
+        normal_font.setFontWeight(QtGui.QFont.Normal)
+        current_chat_text.setCurrentCharFormat(normal_font)
+        current_chat_text.insertPlainText(message + '\n')
+        current_chat_text.moveCursor(QtGui.QTextCursor.End)
 
     def add_contact(self):
         items = self.client.get_all_contacts()
         item, ok = QtWidgets.QInputDialog. \
-            getItem(self,  # parent
+            getItem(None,  # parent
                     "Adding new friend",  # title
                     "Friend to add",  # label
                     items,  # items
@@ -76,8 +87,9 @@ class ChatWindow(QtWidgets.QMainWindow):
             self.client.add_friend(item)
 
     def _create_new_tab(self):
-        newTab = ChatTab()
-        self._ui.ChatsTabWidget.addTab(newTab, 'NewTab')
+        new_tab = ChatTab()
+        self._ui.ChatsTabWidget.addTab(new_tab, 'NewChatTab')
+        return new_tab
 
 
 class QtChatView:
