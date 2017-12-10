@@ -33,13 +33,14 @@ class ChatWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self._ui = Ui_ChatMainWindow()
         self._ui.setupUi(self)
-        self.current_tab = self._create_new_tab()
+        self.current_tab = self._create_new_tab('FirstChatTab')
         self._ui.ChatsTabWidget.removeTab(0)
         self._ui.SendButton.clicked.connect(self.get_new_message)
         self._ui.SendButton.setShortcut('Ctrl+Return')
         self._ui.SendButton.setToolTip('Ctrl+Enter')
         # self._ui.ChatsTabWidget.tabBarClicked.connect(self.read_new_message)
         self._ui.action_add_friend.triggered.connect(self.add_contact)
+        self._ui.ContactsListWidget.itemClicked.connect(self.activate_chat)
         # self._ui.SendButton.clicked.connect(self._create_new_tab)
 
     def start(self):
@@ -86,10 +87,14 @@ class ChatWindow(QtWidgets.QMainWindow):
             self._ui.ContactsListWidget.addItem(item)
             self.client.add_friend(item)
 
-    def _create_new_tab(self):
+    def _create_new_tab(self, tab_title):
         new_tab = ChatTab()
-        self._ui.ChatsTabWidget.addTab(new_tab, 'NewChatTab')
+        self._ui.ChatsTabWidget.addTab(new_tab, tab_title)
         return new_tab
+
+    def activate_chat(self, selected_chat):
+        chat_name = selected_chat.text()
+        self._create_new_tab(chat_name)
 
 
 class QtChatView:
