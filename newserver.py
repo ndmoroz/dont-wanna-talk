@@ -1,18 +1,14 @@
-# Server program
-from socket import socket, AF_INET, SOCK_STREAM
+# DontWannaTalk Server script
 from json_creator import \
     get_message_type, \
     JimAction, \
     get_username, \
-    get_adding_friend_name
+    get_adding_friend_name, \
+    get_message_sendto
 import argparse
-import log_config
 from socketserver import ThreadingTCPServer, StreamRequestHandler
 from storage import ServerStorage
 from ast import literal_eval as str_to_dict
-
-
-# log = log_config.Log('server')
 
 
 class MessageHandler(StreamRequestHandler):
@@ -30,13 +26,12 @@ class MessageHandler(StreamRequestHandler):
             print(client_message)
             return str_to_dict(client_message)
 
-
     def handle(self):
         print('Client connected - {}:{}'.format(*self.client_address))
 
         presence_message = self._read_message()
         if presence_message is not None:
-            client_id = self.server.get_id_by_presence(presence_message)
+            client_id = self.server.get_id_by_presence(self, presence_message)
             self.server.add_client(self)
 
             while True:
@@ -51,7 +46,6 @@ class MessageHandler(StreamRequestHandler):
         print('Client disconnected - {}:{}'.format(*self.client_address))
 
 
-
 class Server(ThreadingTCPServer):
     allow_reuse_address = True
     max_children = 10
@@ -59,6 +53,7 @@ class Server(ThreadingTCPServer):
     def __init__(self, server_address, request_handler_class):
         super().__init__(server_address, request_handler_class, True)
         self.clients = set()
+        self.clients_dict = {}
         self.storage = ServerStorage()
         self.messages = []
 
@@ -79,13 +74,11 @@ class Server(ThreadingTCPServer):
             self.write_to_client(client, message)
 
     def parse_client_message(self, client, client_id, message):
-        ip = client.client_address[0]
-
         message_type = get_message_type(message)
-        if message_type == JimAction.presence:
-            self.register_client_connect(get_username(message), ip)
+        # if message_type == JimAction.presence:
+        #     self.register_client_connect(client, get_username(message))
 
-        elif message_type == JimAction.get_all_contacts:
+        if message_type == JimAction.get_all_contacts:
             self._send_all_contacts(client)
 
         elif message_type == JimAction.get_contacts:
@@ -96,13 +89,20 @@ class Server(ThreadingTCPServer):
             self._add_client_friend(client_id, friend_name)
 
         elif message_type == JimAction.msg:
-            self.write_to_all_clients(message, client)
+            to_name = get_message_sendto(message)
+            if to_name in self.clients_dict.keys():
+                client = self.clients_dict[to_name]
+                # self.write_to_all_clients(message, client)
+                self.write_to_client(client, str(message))
 
-    def register_client_connect(self, username, ip):
+    def register_client_connect(self, client, username):
+        ip = client.client_address[0]
+        self.clients_dict[username] = client
         self.storage.save_client_connect(username, ip)
 
-    def get_id_by_presence(self, presence_message):
+    def get_id_by_presence(self, client, presence_message):
         client_name = get_username(presence_message)
+        self.register_client_connect(client, client_name)
         client_id = self.storage.get_client_id(client_name)
         return client_id
 

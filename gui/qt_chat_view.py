@@ -54,7 +54,9 @@ class ChatWindow(QtWidgets.QMainWindow):
         if self.current_tab is not None:
             message = self._ui.MessagePlainTextEdit.toPlainText()
             self.print_message(self.client.user_name, message)
-            self.client.write_message(message)
+            destination = self.current_chat_name
+            self.client.write_message(destination, message)
+            # self.client.write_message(destination, message)
             self._ui.MessagePlainTextEdit.clear()
 
     def read_new_message(self):
@@ -112,6 +114,9 @@ class ChatWindow(QtWidgets.QMainWindow):
 
     def _update_current_tab(self):
         self.current_tab = self._ui.ChatsTabWidget.currentWidget()
+        current_tab_index = self._ui.ChatsTabWidget.currentIndex()
+        self.current_chat_name = \
+            self._ui.ChatsTabWidget.tabText(current_tab_index)
 
 
 class QtChatView:

@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_ChatMainWindow(object):
     def setupUi(self, ChatMainWindow):
         ChatMainWindow.setObjectName("ChatMainWindow")
-        ChatMainWindow.resize(545, 360)
+        ChatMainWindow.resize(278, 154)
         ChatMainWindow.setMinimumSize(QtCore.QSize(0, 0))
         self.centralwidget = QtWidgets.QWidget(ChatMainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -137,8 +137,6 @@ class Ui_ChatMainWindow(object):
         self.action_add_friend.setIcon(icon)
         self.action_add_friend.setObjectName("action_add_friend")
 
-        self.ContactsListWidget.addAction(self.action_add_friend)
-
         self.retranslateUi(ChatMainWindow)
         self.ChatsTabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(ChatMainWindow)
@@ -146,7 +144,7 @@ class Ui_ChatMainWindow(object):
     def retranslateUi(self, ChatMainWindow):
         _translate = QtCore.QCoreApplication.translate
         ChatMainWindow.setWindowTitle(
-            _translate("ChatMainWindow", "MainWindow"))
+            _translate("ChatMainWindow", "DontWannaTalk Chat"))
         self.ChatsTabWidget.setTabText(self.ChatsTabWidget.indexOf(self.tab),
                                        _translate("ChatMainWindow", "Tab 1"))
         self.SendButton.setText(_translate("ChatMainWindow", "Send"))
@@ -154,6 +152,3 @@ class Ui_ChatMainWindow(object):
             _translate("ChatMainWindow", "Add friend"))
         self.action_add_friend.setToolTip(_translate("ChatMainWindow",
                                                      "Adds new friend to your contact list"))
-
-
-import gui.Icons

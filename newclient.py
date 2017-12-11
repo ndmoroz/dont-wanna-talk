@@ -124,9 +124,9 @@ class Client:
                     contacts.append(message)
         return contacts
 
-    def write_message(self, message):
+    def write_message(self, destination, message):
         self.send_message(
-            json(get_message(send_to='Agora',
+            json(get_message(send_to=destination,
                              send_from=self.user_name,
                              message=message)))
 
