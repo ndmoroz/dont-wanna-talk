@@ -33,15 +33,16 @@ class ChatWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self, parent)
         self._ui = Ui_ChatMainWindow()
         self._ui.setupUi(self)
-        self.current_tab = self._create_new_tab('FirstChatTab')
+        self.current_tab = None
         self._ui.ChatsTabWidget.removeTab(0)
         self._ui.SendButton.clicked.connect(self.get_new_message)
         self._ui.SendButton.setShortcut('Ctrl+Return')
         self._ui.SendButton.setToolTip('Ctrl+Enter')
-        # self._ui.ChatsTabWidget.tabBarClicked.connect(self.read_new_message)
+        self._ui.ChatsTabWidget.tabBarClicked.connect(self.tab_clicked)
+        self._ui.ChatsTabWidget.tabBarDoubleClicked.connect(
+            self.close_current_tab)
         self._ui.action_add_friend.triggered.connect(self.add_contact)
-        self._ui.ContactsListWidget.itemClicked.connect(self.activate_chat)
-        # self._ui.SendButton.clicked.connect(self._create_new_tab)
+        self._ui.ContactsListWidget.itemClicked.connect(self.contact_clicked)
 
     def start(self):
         friend_list = self.client.get_friend_list()
@@ -50,29 +51,31 @@ class ChatWindow(QtWidgets.QMainWindow):
         self.show()
 
     def get_new_message(self):
-        message = self._ui.MessagePlainTextEdit.toPlainText()
-        self.print_message(self.client.user_name, message)
-        self.client.write_message(message)
-        self._ui.MessagePlainTextEdit.clear()
+        if self.current_tab is not None:
+            message = self._ui.MessagePlainTextEdit.toPlainText()
+            self.print_message(self.client.user_name, message)
+            self.client.write_message(message)
+            self._ui.MessagePlainTextEdit.clear()
 
     def read_new_message(self):
         self.print_message(
             self.client.rfile.readline().strip().decode('utf-8'))
 
     def print_message(self, user, message):
-        current_chat_text = self.current_tab.ui.ChatPlainTextEdit
-        current_chat_text.moveCursor(QtGui.QTextCursor.End)
+        if self.current_tab is not None:
+            current_chat_text = self.current_tab.ui.ChatPlainTextEdit
+            current_chat_text.moveCursor(QtGui.QTextCursor.End)
 
-        bold_font = QtGui.QTextCharFormat()
-        bold_font.setFontWeight(QtGui.QFont.Bold)
-        current_chat_text.setCurrentCharFormat(bold_font)
-        current_chat_text.insertPlainText(user + '>')
+            bold_font = QtGui.QTextCharFormat()
+            bold_font.setFontWeight(QtGui.QFont.Bold)
+            current_chat_text.setCurrentCharFormat(bold_font)
+            current_chat_text.insertPlainText(user + '>')
 
-        normal_font = QtGui.QTextCharFormat()
-        normal_font.setFontWeight(QtGui.QFont.Normal)
-        current_chat_text.setCurrentCharFormat(normal_font)
-        current_chat_text.insertPlainText(message + '\n')
-        current_chat_text.moveCursor(QtGui.QTextCursor.End)
+            normal_font = QtGui.QTextCharFormat()
+            normal_font.setFontWeight(QtGui.QFont.Normal)
+            current_chat_text.setCurrentCharFormat(normal_font)
+            current_chat_text.insertPlainText(message + '\n')
+            current_chat_text.moveCursor(QtGui.QTextCursor.End)
 
     def add_contact(self):
         items = self.client.get_all_contacts()
@@ -90,11 +93,25 @@ class ChatWindow(QtWidgets.QMainWindow):
     def _create_new_tab(self, tab_title):
         new_tab = ChatTab()
         self._ui.ChatsTabWidget.addTab(new_tab, tab_title)
-        return new_tab
+        self._ui.ChatsTabWidget.setCurrentWidget(new_tab)
+        self._update_current_tab()
 
-    def activate_chat(self, selected_chat):
+    def contact_clicked(self, selected_chat):
         chat_name = selected_chat.text()
         self._create_new_tab(chat_name)
+        self._update_current_tab()
+
+    def tab_clicked(self, tab_index):
+        self._ui.ChatsTabWidget.setCurrentIndex(tab_index)
+        self._update_current_tab()
+
+    def close_current_tab(self):
+        current_tab_index = self._ui.ChatsTabWidget.currentIndex()
+        self._ui.ChatsTabWidget.removeTab(current_tab_index)
+        self._update_current_tab()
+
+    def _update_current_tab(self):
+        self.current_tab = self._ui.ChatsTabWidget.currentWidget()
 
 
 class QtChatView:
