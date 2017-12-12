@@ -191,10 +191,6 @@ def get_quantity_message(count):
 
 
 def get_quantity(message):
-    return message[JimField.quantity]
-
-
-def get_quantity(message):
     if JimField.quantity in message:
         return message[JimField.quantity]
 
@@ -229,6 +225,10 @@ def json(func):
 
 def dejson(func):
     return json_module.loads(func)
+
+
+def is_message_response(message):
+    return JimField.response in message.keys()
 
 
 def get_message_type(message):

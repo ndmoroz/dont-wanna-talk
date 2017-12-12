@@ -7,14 +7,18 @@ from json_creator import \
     get_all_contacts_message, \
     get_contacts_message, \
     get_contact_name, \
-    get_add_friend_message
-import log_config
+    get_add_friend_message, \
+    get_message_type, \
+    get_message_sendfrom, \
+    get_message_text, \
+    get_quantity, \
+    is_message_response, \
+    JimAction, \
+    JimField
 import argparse
 from gui.qt_chat_view import QtChatView
 from threading import Thread
-
-
-# log = log_config.Log('client')
+from ast import literal_eval as str_to_dict
 
 
 class SendThread(Thread):
@@ -46,6 +50,24 @@ class ReceiveThread(Thread):
             self.client.messages.append(message)
             if resp:
                 print('Received:', message)
+                message_dict = str_to_dict(message)
+
+                if is_message_response(message_dict):
+                    if JimField.quantity in message:
+                        contact_count = get_quantity(message_dict)
+
+                else:
+                    message_type = get_message_type(message_dict)
+                    if message_type == JimAction.msg:
+                        msg_from = get_message_sendfrom(message_dict)
+                        msg_text = get_message_text(message_dict)
+                        self.client.print_message(msg_from, msg_text)
+                    elif message_type == JimAction.contact_list:
+                        contact = get_contact_name(message_dict)
+                        self.client.contacts.append(contact)
+                        contact_count = contact_count - 1
+                        if contact_count == 0:
+                            self.client.contacts_reception_finished = True
 
 
 class Client:
@@ -53,6 +75,8 @@ class Client:
         self.view = QtChatView()
         self.view.set_client(self)
         self.messages = []
+        self.contacts = []
+        self.contacts_reception_finished = False
 
     def parse_arguments(self):
         arg_parser = argparse.ArgumentParser()
@@ -87,42 +111,24 @@ class Client:
         self.view.show_chat()
 
     def get_all_contacts(self):
+        self.contacts_reception_finished = False
+        self.contacts = []
         get_contacts_message = json(get_all_contacts_message())
         self.send_message(get_contacts_message)
-        contacts = []
         while True:
-            if len(self.messages) > 0:
-                message = self.messages.pop()
-                if 'Start List' in message:
-                    break
-        while True:
-            if len(self.messages) > 0:
-                message = self.messages.pop()
-                if message:
-                    print('Parsing [', message, ']')
-                    if 'End List' in message:
-                        break
-                    contacts.append(message)
-        return contacts
+            if self.contacts_reception_finished:
+                break
+        return self.contacts
 
     def get_friend_list(self):
+        self.contacts_reception_finished = False
+        self.contacts = []
         get_friends_message = json(get_contacts_message())
         self.send_message(get_friends_message)
-        contacts = []
         while True:
-            if len(self.messages) > 0:
-                message = self.messages.pop()
-                if 'Start List' in message:
-                    break
-        while True:
-            if len(self.messages) > 0:
-                message = self.messages.pop()
-                if message:
-                    print('Parsing [', message, ']')
-                    if 'End List' in message:
-                        break
-                    contacts.append(message)
-        return contacts
+            if self.contacts_reception_finished:
+                break
+        return self.contacts
 
     def write_message(self, destination, message):
         self.send_message(
@@ -170,6 +176,9 @@ class Client:
     def add_friend(self, new_friend):
         add_friend_message = json(get_add_friend_message(new_friend))
         self.send_message(add_friend_message)
+
+    def print_message(self, msg_from, msg_text):
+        self.view.print_message(msg_from, msg_text)
 
 
 if __name__ == "__main__":

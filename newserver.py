@@ -1,10 +1,13 @@
 # DontWannaTalk Server script
 from json_creator import \
+    json, \
     get_message_type, \
     JimAction, \
     get_username, \
     get_adding_friend_name, \
-    get_message_sendto
+    get_message_sendto, \
+    get_quantity_message, \
+    get_contact_message
 import argparse
 from socketserver import ThreadingTCPServer, StreamRequestHandler
 from storage import ServerStorage
@@ -112,11 +115,11 @@ class Server(ThreadingTCPServer):
         for contact in all_contacts:
             contacts.append(contact)
         contacts_count = len(contacts)
-        self.write_to_client(client, 'Start List')
-        # self.write_to_client(client, str(contacts_count))
+        quantity_message = json(get_quantity_message(contacts_count))
+        self.write_to_client(client, quantity_message)
         for contact in contacts:
-            self.write_to_client(client, contact)
-        self.write_to_client(client, 'End List')
+            contact_message = json(get_contact_message(contact))
+            self.write_to_client(client, contact_message)
 
     def _send_client_contacts(self, client, client_id):
         client_friends = self.storage.get_client_friends(client_id)
@@ -124,11 +127,11 @@ class Server(ThreadingTCPServer):
         for contact in client_friends:
             contacts.append(contact)
         contacts_count = len(contacts)
-        self.write_to_client(client, 'Start List')
-        # self.write_to_client(client, str(contacts_count))
+        quantity_message = json(get_quantity_message(contacts_count))
+        self.write_to_client(client, quantity_message)
         for contact in contacts:
-            self.write_to_client(client, contact)
-        self.write_to_client(client, 'End List')
+            contact_message = json(get_contact_message(contact))
+            self.write_to_client(client, contact_message)
 
     def _add_client_friend(self, client_id, friend_name):
         self.storage.add_new_friend(client_id, friend_name)

@@ -136,6 +136,7 @@ class Ui_ChatMainWindow(object):
                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.action_add_friend.setIcon(icon)
         self.action_add_friend.setObjectName("action_add_friend")
+        self.ContactsListWidget.addAction(self.action_add_friend)
 
         self.retranslateUi(ChatMainWindow)
         self.ChatsTabWidget.setCurrentIndex(0)

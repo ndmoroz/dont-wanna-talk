@@ -137,3 +137,6 @@ class QtChatView:
 
     def set_client(self, client_model):
         self.chat_window.client = client_model
+
+    def print_message(self, msg_from, msg_text):
+        self.chat_window.print_message(msg_from, msg_text)
