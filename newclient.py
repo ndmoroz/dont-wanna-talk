@@ -118,6 +118,7 @@ class Client:
         while True:
             if self.contacts_reception_finished:
                 break
+        self.contacts.remove(self.user_name)
         return self.contacts
 
     def get_friend_list(self):

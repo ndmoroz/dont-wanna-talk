@@ -43,6 +43,7 @@ class ChatWindow(QtWidgets.QMainWindow):
             self.close_current_tab)
         self._ui.action_add_friend.triggered.connect(self.add_contact)
         self._ui.ContactsListWidget.itemClicked.connect(self.contact_clicked)
+        self.opened_tabs = {}
 
     def start(self):
         friend_list = self.client.get_friend_list()
@@ -96,20 +97,29 @@ class ChatWindow(QtWidgets.QMainWindow):
         new_tab = ChatTab()
         self._ui.ChatsTabWidget.addTab(new_tab, tab_title)
         self._ui.ChatsTabWidget.setCurrentWidget(new_tab)
+        self.opened_tabs[tab_title] = new_tab
         self._update_current_tab()
 
     def contact_clicked(self, selected_chat):
         chat_name = selected_chat.text()
-        self._create_new_tab(chat_name)
+        self.activate_tab(chat_name)
+
+    def activate_tab(self, selected_chat):
+        if selected_chat in self.opened_tabs.keys():
+            self._ui.ChatsTabWidget.setCurrentWidget(
+                self.opened_tabs[selected_chat])
+        else:
+            self._create_new_tab(selected_chat)
         self._update_current_tab()
 
     def tab_clicked(self, tab_index):
         self._ui.ChatsTabWidget.setCurrentIndex(tab_index)
         self._update_current_tab()
 
-    def close_current_tab(self):
-        current_tab_index = self._ui.ChatsTabWidget.currentIndex()
-        self._ui.ChatsTabWidget.removeTab(current_tab_index)
+    def close_current_tab(self, tab_index):
+        closing_tab_name = self._ui.ChatsTabWidget.tabText(tab_index)
+        self.opened_tabs.pop(closing_tab_name, None)
+        self._ui.ChatsTabWidget.removeTab(tab_index)
         self._update_current_tab()
 
     def _update_current_tab(self):

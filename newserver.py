@@ -26,7 +26,7 @@ class MessageHandler(StreamRequestHandler):
             data = data.strip()
             client_message = data.decode('utf-8')
             self.server.messages.append((self, client_message))
-            print(client_message)
+            print('Received: ', client_message)
             return str_to_dict(client_message)
 
     def handle(self):
