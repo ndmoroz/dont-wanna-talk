@@ -57,7 +57,6 @@ class ChatWindow(QtWidgets.QMainWindow):
             self.print_message(self.client.user_name, message)
             destination = self.current_chat_name
             self.client.write_message(destination, message)
-            # self.client.write_message(destination, message)
             self._ui.MessagePlainTextEdit.clear()
 
     def read_new_message(self):
@@ -65,8 +64,15 @@ class ChatWindow(QtWidgets.QMainWindow):
             self.client.rfile.readline().strip().decode('utf-8'))
 
     def print_message(self, user, message):
-        if self.current_tab is not None:
-            current_chat_text = self.current_tab.ui.ChatPlainTextEdit
+        self.write_message_on_tab(self.current_tab, user, message)
+
+    def show_message(self, user, message):
+        user_tab = self.get_tab(user)
+        self.write_message_on_tab(user_tab, user, message)
+
+    def write_message_on_tab(self, tab, user, message):
+        if tab is not None:
+            current_chat_text = tab.ui.ChatPlainTextEdit
             current_chat_text.moveCursor(QtGui.QTextCursor.End)
 
             bold_font = QtGui.QTextCharFormat()
@@ -105,12 +111,14 @@ class ChatWindow(QtWidgets.QMainWindow):
         self.activate_tab(chat_name)
 
     def activate_tab(self, selected_chat):
-        if selected_chat in self.opened_tabs.keys():
-            self._ui.ChatsTabWidget.setCurrentWidget(
-                self.opened_tabs[selected_chat])
-        else:
-            self._create_new_tab(selected_chat)
+        self._ui.ChatsTabWidget.setCurrentWidget(self.get_tab(selected_chat))
         self._update_current_tab()
+
+    def get_tab(self, selected_chat):
+        if selected_chat in self.opened_tabs.keys():
+            return self.opened_tabs[selected_chat]
+        else:
+            return self._create_new_tab(selected_chat)
 
     def tab_clicked(self, tab_index):
         self._ui.ChatsTabWidget.setCurrentIndex(tab_index)
@@ -149,4 +157,4 @@ class QtChatView:
         self.chat_window.client = client_model
 
     def print_message(self, msg_from, msg_text):
-        self.chat_window.print_message(msg_from, msg_text)
+        self.chat_window.show_message(msg_from, msg_text)
