@@ -19,6 +19,7 @@ import argparse
 from gui.qt_chat_view import QtChatView
 from threading import Thread
 from ast import literal_eval as str_to_dict
+from PyQt5.QtCore import pyqtSignal, QObject
 
 
 class SendThread(Thread):
@@ -61,7 +62,8 @@ class ReceiveThread(Thread):
                     if message_type == JimAction.msg:
                         msg_from = get_message_sendfrom(message_dict)
                         msg_text = get_message_text(message_dict)
-                        self.client.print_message(msg_from, msg_text)
+                        self.client.print_message.emit(msg_from, msg_text)
+                        # self.client.print_message(msg_from, msg_text)
                     elif message_type == JimAction.contact_list:
                         contact = get_contact_name(message_dict)
                         self.client.contacts.append(contact)
@@ -70,8 +72,11 @@ class ReceiveThread(Thread):
                             self.client.contacts_reception_finished = True
 
 
-class Client:
+class Client(QObject):
+    print_message = pyqtSignal(str, str)
+
     def __init__(self):
+        super().__init__()
         self.view = QtChatView()
         self.view.set_client(self)
         self.messages = []
@@ -177,9 +182,6 @@ class Client:
     def add_friend(self, new_friend):
         add_friend_message = json(get_add_friend_message(new_friend))
         self.send_message(add_friend_message)
-
-    def print_message(self, msg_from, msg_text):
-        self.view.print_message(msg_from, msg_text)
 
 
 if __name__ == "__main__":
