@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_ChatMainWindow(object):
     def setupUi(self, ChatMainWindow):
         ChatMainWindow.setObjectName("ChatMainWindow")
-        ChatMainWindow.resize(278, 154)
+        ChatMainWindow.resize(400, 200)
         ChatMainWindow.setMinimumSize(QtCore.QSize(0, 0))
         self.centralwidget = QtWidgets.QWidget(ChatMainWindow)
         self.centralwidget.setObjectName("centralwidget")
