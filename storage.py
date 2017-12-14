@@ -44,9 +44,9 @@ class ServerStorage:
             client_id = client.client_id
             if client_id is not None:
                 return client_id
-            else:
-                self.save_new_client(username)
-                return self.get_client_id(username)
+        else:
+            self.save_new_client(username)
+            return self.get_client_id(username)
 
     def get_all_contacts(self):
         clients = []
