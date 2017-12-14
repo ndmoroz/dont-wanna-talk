@@ -88,6 +88,8 @@ class ChatWindow(QtWidgets.QMainWindow):
 
     def add_contact(self):
         items = self.client.get_all_contacts()
+        if len(items) == 0:
+            return
         item, ok = QtWidgets.QInputDialog. \
             getItem(None,  # parent
                     "Adding new friend",  # title
@@ -115,10 +117,9 @@ class ChatWindow(QtWidgets.QMainWindow):
         self._update_current_tab()
 
     def get_tab(self, selected_chat):
-        if selected_chat in self.opened_tabs.keys():
-            return self.opened_tabs[selected_chat]
-        else:
-            return self._create_new_tab(selected_chat)
+        if selected_chat not in self.opened_tabs.keys():
+            self._create_new_tab(selected_chat)
+        return self.opened_tabs[selected_chat]
 
     def tab_clicked(self, tab_index):
         self._ui.ChatsTabWidget.setCurrentIndex(tab_index)
@@ -148,7 +149,8 @@ class QtChatView:
         self._app.exec_()
         return self.login_window.username
 
-    def show_chat(self):
+    def show_chat(self, user_name):
+        self.chat_window.setWindowTitle(user_name + " doesn't wanna talk")
         self.chat_window.start()
         self._app.exec_()
 

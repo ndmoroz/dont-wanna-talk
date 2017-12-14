@@ -56,6 +56,8 @@ class ReceiveThread(Thread):
                 if is_message_response(message_dict):
                     if JimField.quantity in message:
                         contact_count = get_quantity(message_dict)
+                        if contact_count == 0:
+                            self.client.contacts_reception_finished = True
 
                 else:
                     message_type = get_message_type(message_dict)
@@ -63,7 +65,7 @@ class ReceiveThread(Thread):
                         msg_from = get_message_sendfrom(message_dict)
                         msg_text = get_message_text(message_dict)
                         self.client.print_message.emit(msg_from, msg_text)
-                        # self.client.print_message(msg_from, msg_text)
+
                     elif message_type == JimAction.contact_list:
                         contact = get_contact_name(message_dict)
                         self.client.contacts.append(contact)
@@ -112,9 +114,6 @@ class Client(QObject):
     def receive_server_response_old(self):
         return str(self.socket.recv(1024), 'utf-8')
 
-    def start_writer_mode(self):
-        self.view.show_chat()
-
     def get_all_contacts(self):
         self.contacts_reception_finished = False
         self.contacts = []
@@ -123,7 +122,8 @@ class Client(QObject):
         while True:
             if self.contacts_reception_finished:
                 break
-        self.contacts.remove(self.user_name)
+        if self.user_name in self.contacts:
+            self.contacts.remove(self.user_name)
         return self.contacts
 
     def get_friend_list(self):
@@ -141,11 +141,6 @@ class Client(QObject):
             json(get_message(send_to=destination,
                              send_from=self.user_name,
                              message=message)))
-
-    def start_reader_mode(self):
-        self.view.show_chat()
-        # while True:
-        #     self.view.print_message(self.receive_server_response())
 
     def main(self):
         # Parse script arguments
@@ -172,10 +167,7 @@ class Client(QObject):
         self.recv_thread = ReceiveThread(self)
         self.recv_thread.start()
 
-        if self.rw_status == 'w':
-            self.start_writer_mode()
-        elif self.rw_status == 'r':
-            self.start_reader_mode()
+        self.view.show_chat(self.user_name)
 
         self.socket.close()
 

@@ -95,7 +95,6 @@ class Server(ThreadingTCPServer):
             to_name = get_message_sendto(message)
             if to_name in self.clients_dict.keys():
                 client = self.clients_dict[to_name]
-                # self.write_to_all_clients(message, client)
                 self.write_to_client(client, str(message))
 
     def register_client_connect(self, client, username):
