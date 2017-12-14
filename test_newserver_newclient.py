@@ -8,14 +8,14 @@ class TestServerClient(unittest.TestCase):
         try:
             # Launching server, client-writer and client-reader
             # specifying encoding to communicate in strings, not in bytes
-            server = subprocess.Popen(['python', 'newserver.py'],
+            server = subprocess.Popen(['python', 'server.py'],
                                       stdout=subprocess.PIPE,
                                       stdin=subprocess.PIPE,
                                       stderr=subprocess.STDOUT,
                                       encoding='utf-8')
 
             writer = subprocess.Popen(
-                ['python', 'newclient.py', '-w', 'localhost'],
+                ['python', 'client.py', '-w', 'localhost'],
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -25,7 +25,7 @@ class TestServerClient(unittest.TestCase):
             writer.stdin.flush()
 
             reader = subprocess.Popen(
-                ['python', 'newclient.py', '-r', 'localhost'],
+                ['python', 'client.py', '-r', 'localhost'],
                 stdout=subprocess.PIPE,
                 stdin=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
