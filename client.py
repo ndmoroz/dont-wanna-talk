@@ -20,6 +20,7 @@ from gui.qt_chat_view import QtChatView
 from threading import Thread
 from ast import literal_eval as str_to_dict
 from PyQt5.QtCore import pyqtSignal, QObject
+from time import sleep
 
 
 class SendThread(Thread):
@@ -46,7 +47,12 @@ class ReceiveThread(Thread):
 
     def run(self):
         while not self.is_stopped:
+            sleep(0.1)
             resp = self.client.rfile.readline().strip()
+            # resp = self.client.rfile.readline()
+            # if not resp:
+            #     continue
+            # resp = resp.strip()
             message = resp.decode('utf-8')
             self.client.messages.append(message)
             if resp:
